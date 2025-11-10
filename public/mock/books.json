@@ -1,0 +1,102 @@
+[
+  {
+    "id": "b1",
+    "title": "듄",
+    "author": "프랭크 허버트",
+    "coverUrl": "https://picsum.photos/200/300?random=1",
+    "summary": "사막 행성 아라키스를 둘러싼 서사.",
+    "buyUrl": "https://example.com/buy/dune",
+    "canReadInline": true,
+    "genres": ["SF", "서사"]
+  },
+  {
+    "id": "b2",
+    "title": "해리 포터",
+    "author": "J.K. 롤링",
+    "coverUrl": "https://picsum.photos/200/300?random=2",
+    "summary": "마법사 소년의 성장기.",
+    "buyUrl": "https://example.com/buy/hp",
+    "canReadInline": false,
+    "genres": ["판타지"]
+  },
+  {
+    "id": "b3",
+    "title": "1984",
+    "author": "조지 오웰",
+    "coverUrl": "https://picsum.photos/200/300?random=3",
+    "summary": "전체주의 사회의 디스토피아적 묘사.",
+    "buyUrl": "https://example.com/buy/1984",
+    "canReadInline": true,
+    "genres": ["디스토피아", "정치"]
+  },
+  {
+    "id": "b4",
+    "title": "호밀밭의 파수꾼",
+    "author": "J.D. 샐린저",
+    "coverUrl": "https://picsum.photos/200/300?random=4",
+    "summary": "청춘의 고뇌와 갈등을 그린 소설.",
+    "buyUrl": "https://example.com/buy/catcher",
+    "canReadInline": false,
+    "genres": ["소설"]
+  },
+  {
+    "id": "b5",
+    "title": "반지의 제왕",
+    "author": "J.R.R. 톨킨",
+    "coverUrl": "https://picsum.photos/200/300?random=5",
+    "summary": "마법과 전투가 펼쳐지는 판타지 대서사시.",
+    "buyUrl": "https://example.com/buy/lordoftherings",
+    "canReadInline": true,
+    "genres": ["판타지", "모험"]
+  },
+  {
+    "id": "b6",
+    "title": "자기만의 방",
+    "author": "버지니아 울프",
+    "coverUrl": "https://picsum.photos/200/300?random=6",
+    "summary": "여성의 사회적, 경제적 자유에 대한 논의.",
+    "buyUrl": "https://example.com/buy/roomofonesown",
+    "canReadInline": false,
+    "genres": ["에세이"]
+  },
+  {
+    "id": "b7",
+    "title": "데미안",
+    "author": "헤르만 헤세",
+    "coverUrl": "https://picsum.photos/200/300?random=7",
+    "summary": "청춘의 자기 발견을 그린 소설.",
+    "buyUrl": "https://example.com/buy/demian",
+    "canReadInline": true,
+    "genres": ["소설", "철학"]
+  },
+  {
+    "id": "b8",
+    "title": "어린 왕자",
+    "author": "앙투안 드 생텍쥐페리",
+    "coverUrl": "https://picsum.photos/200/300?random=8",
+    "summary": "삶과 사랑에 관한 철학적 이야기.",
+    "buyUrl": "https://example.com/buy/littleprince",
+    "canReadInline": true,
+    "genres": ["동화", "철학"]
+  },
+  {
+    "id": "b9",
+    "title": "몽유병자",
+    "author": "서경식",
+    "coverUrl": "https://picsum.photos/200/300?random=9",
+    "summary": "자아를 찾아 떠나는 여행에 대한 이야기.",
+    "buyUrl": "https://example.com/buy/somnambulist",
+    "canReadInline": false,
+    "genres": ["소설", "심리"]
+  },
+  {
+    "id": "b10",
+    "title": "어떻게 살 것인가",
+    "author": "유시민",
+    "coverUrl": "https://picsum.photos/200/300?random=10",
+    "summary": "삶의 의미와 가치에 대한 고민.",
+    "buyUrl": "https://example.com/buy/howtolive",
+    "canReadInline": true,
+    "genres": ["에세이", "철학"]
+  }
+]

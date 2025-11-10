@@ -1,0 +1,109 @@
+@import 'tailwindcss';
+
+@layer base {
+    /* 1. 전체 기본 스타일 리셋 */
+
+    /* 모든 요소의 기본 여백 및 패딩을 제거 */
+    *,
+    *::before,
+    *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    }
+
+    /* 기본 폰트 설정 (디폴트 폰트를 Arial로 설정) */
+    body {
+    font-family: 'Arial', sans-serif;
+    line-height: 1.5;
+    background-color: #000;  /* 배경을 검은색으로 설정 */
+    color: #fff;  /* 기본 텍스트 색상 흰색 */
+    -webkit-font-smoothing: antialiased; /* 폰트 렌더링 최적화 */
+    -moz-osx-font-smoothing: grayscale; /* 폰트 렌더링 최적화 */
+    }
+
+    /* 링크 기본 스타일 설정 */
+    a {
+    color: inherit;  /* 링크 색상 상속 */
+    text-decoration: none;  /* 밑줄 제거 */
+    }
+
+    a:hover {
+    text-decoration: underline;  /* hover 시 밑줄 추가 */
+    }
+
+    /* 입력 필드와 버튼의 기본 스타일 */
+    input,
+    button,
+    textarea,
+    select {
+    background-color: transparent;
+    border: none;
+    outline: none;
+    }
+
+    /* 기본적인 폼 요소 스타일 리셋 */
+    input,
+    textarea,
+    select {
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    }
+
+    /* 기본적으로 block-level 요소의 margin-bottom을 제거 */
+    h1, h2, h3, h4, h5, h6,
+    p,
+    ul, ol, li,
+    figure, blockquote,
+    dl, dt, dd {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    }
+
+    /* 2. 배경과 기본 색상 설정 */
+
+    /* 페이지 전체 배경을 검은색으로 설정 */
+    body {
+    background-color: #000; /* 검은색 배경 */
+    color: #fff; /* 기본 텍스트 색상 흰색 */
+    }
+
+    /* 3. 기본 텍스트 스타일 */
+
+    /* 기본 텍스트 색상을 흰색으로 설정 */
+    h1, h2, h3, h4, h5, h6,
+    p,
+    li {
+    color: #fff;
+    }
+
+    /* 4. 기타 기본 설정 */
+
+    /* 버튼 기본 스타일 */
+    button {
+    cursor: pointer;
+    }
+
+    /* 링크 기본 스타일 */
+    a {
+    color: #00f;
+    text-decoration: none;
+    }
+
+    a:hover {
+    text-decoration: underline;
+    }
+
+    /* 5. 화면 크기 리셋 (반응형을 위한 초기 설정) */
+    html {
+    font-size: 16px; /* 기본 폰트 크기 */
+    }
+
+    @media (max-width: 768px) {
+    html {
+        font-size: 14px;  /* 모바일에서 폰트 크기 조금 작게 */
+    }
+    }
+
+}
