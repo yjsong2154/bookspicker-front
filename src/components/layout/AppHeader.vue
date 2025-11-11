@@ -22,9 +22,9 @@ function onSearch(e: Event) {
 
         <!-- 메뉴 -->
         <ul class="hidden md:flex items-center gap-5 text-sm text-neutral-300">
-          <li><router-link to="/" class="hover:text-white">홈</router-link></li>
-          <li><router-link to="/" class="hover:text-white">카테고리</router-link></li>
-          <li><router-link to="/" class="hover:text-white">내 서재</router-link></li>
+          <li><router-link to="/best-seller" class="hover:text-white">베스트 셀러</router-link></li>
+          <li><router-link to="/wishlist" class="hover:text-white">짬한 도서</router-link></li>
+          <li><router-link to="/library" class="hover:text-white">내 서재</router-link></li>
         </ul>
 
         <!-- 우측: 검색 + 프로필 -->
@@ -45,7 +45,11 @@ function onSearch(e: Event) {
           </form>
 
           <!-- 프로필 자리 표시자 -->
-          <button class="h-8 w-8 rounded-full bg-neutral-800 ring-1 ring-neutral-700 hover:bg-neutral-700" aria-label="profile"></button>
+          <router-link to="/profile"
+            class="h-8 w-8 rounded-full bg-neutral-800 ring-1 ring-neutral-700 hover:bg-neutral-700 grid place-items-center"
+            aria-label="profile">
+            <!-- 아이콘 있으면 넣어도 됨 -->
+          </router-link>
 
           <!-- 모바일 메뉴 아이콘 (옵션) -->
           <button class="md:hidden p-2 rounded hover:bg-neutral-800" aria-label="menu">

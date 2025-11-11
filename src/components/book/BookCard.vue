@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import type { Book } from '@/types/book'
+import { useWishlistStore } from '@/stores/wishlist'
 const props = defineProps<{ book: Book }>()
+const wishlist = useWishlistStore()
+wishlist.load() // 최초 1회 호출되어도 문제 없음
 </script>
 
 <template>
@@ -24,7 +27,12 @@ const props = defineProps<{ book: Book }>()
         <!-- 바로 보기 버튼 -->
         <a :href="props.book.buyUrl" class="buy-button">바로 보기</a>
         <!-- 찜하기 버튼 -->
-        <a :href="props.book.buyUrl" class="favorite-button">찜하기</a>
+        <button
+          @click="wishlist.toggle(props.book.id)"
+          class="bg-neutral-700 text-white px-4 py-2 rounded-lg hover:bg-neutral-600 transition-colors"
+        >
+          {{ wishlist.has(props.book.id) ? '찜 해제' : '찜하기' }}
+        </button>
       </div>
     </div>
   </article>
