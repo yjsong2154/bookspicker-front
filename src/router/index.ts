@@ -13,6 +13,7 @@ const router = createRouter({
     { path: '/wishlist', name: 'wishlist', component: () => import('@/views/WishlistView.vue'), meta: { requiresAuth: true } },
     { path: '/library', name: 'library', component: () => import('@/views/LibraryView.vue'), meta: { requiresAuth: true } },
     { path: '/profile', name: 'profile', component: () => import('@/views/ProfileView.vue'), meta: { requiresAuth: true } },
+    { path: '/reader', name: 'reader', component: () => import('@/views/EpubReaderView.vue'), meta: { requiresAuth: true } },
 
     // 공개 페이지(약관/개인정보)
     { path: '/terms', name: 'terms', component: () => import('@/views/TermsView.vue') },
