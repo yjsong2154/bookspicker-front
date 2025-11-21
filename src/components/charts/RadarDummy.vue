@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ref, onMounted, watch } from 'vue'
+
 const props = withDefaults(defineProps<{
   categories: string[]          // 축 라벨
   values: number[]              // 0~100
@@ -11,13 +13,51 @@ const cy = size / 2
 const radius = 120
 const step = (2 * Math.PI) / props.categories.length
 
+// 애니메이션을 위한 현재 값 상태
+const currentValues = ref<number[]>(props.values.map(() => 0))
+
+function animateValues() {
+  const duration = 1000 // ms
+  const start = performance.now()
+  const startValues = currentValues.value.map(v => v)
+  const endValues = props.values
+
+  function frame(time: number) {
+    const elapsed = time - start
+    const progress = Math.min(elapsed / duration, 1)
+
+    // Ease out cubic
+    const ease = 1 - Math.pow(1 - progress, 3)
+
+    currentValues.value = startValues.map((s, i) => {
+      const target = endValues[i] ?? 0
+      return s + (target - s) * ease
+    })
+
+    if (progress < 1) {
+      requestAnimationFrame(frame)
+    }
+  }
+
+  requestAnimationFrame(frame)
+}
+
+onMounted(() => {
+  animateValues()
+})
+
+watch(() => props.values, () => {
+  animateValues()
+}, { deep: true })
+
 function p(angleIdx: number, rRatio: number) {
   const a = -Math.PI / 2 + step * angleIdx // 위쪽(12시)부터
   const r = radius * rRatio
   return { x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r }
 }
+
 function polyPoints() {
-  return props.values.map((v, i) => {
+  return currentValues.value.map((v, i) => {
     const { x, y } = p(i, Math.max(0, Math.min(1, v / 100)))
     return `${x},${y}`
   }).join(' ')
@@ -48,7 +88,7 @@ function polyPoints() {
     <!-- 데이터 폴리곤 -->
     <polygon :points="polyPoints()" class="fill-cyan-500/30 stroke-cyan-400" />
     <!-- 데이터 점 -->
-    <g v-for="(v,i) in values" :key="i">
+    <g v-for="(v,i) in currentValues" :key="i">
       <circle :cx="p(i, Math.max(0, Math.min(1, v/100))).x"
               :cy="p(i, Math.max(0, Math.min(1, v/100))).y"
               r="3" class="fill-cyan-300" />
