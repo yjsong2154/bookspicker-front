@@ -8,7 +8,7 @@ const router = createRouter({
 
     // 보호 라우트들
     { path: '/', name: 'home', component: () => import('@/views/HomeView.vue'), meta: { requiresAuth: true } },
-    { path: '/book/:id', name: 'book-detail', component: () => import('@/views/HomeView.vue'), props: true,},
+    { path: '/book/:id', name: 'book-detail', component: () => import('@/views/BookDetailView.vue'), props: true,},
     { path: '/best-seller', name: 'best-seller', component: () => import('@/views/BestSellerView.vue'), meta: { requiresAuth: true } },
     { path: '/wishlist', name: 'wishlist', component: () => import('@/views/WishlistView.vue'), meta: { requiresAuth: true } },
     { path: '/library', name: 'library', component: () => import('@/views/LibraryView.vue'), meta: { requiresAuth: true } },
@@ -20,7 +20,14 @@ const router = createRouter({
     { path: '/privacy', name: 'privacy', component: () => import('@/views/PrivacyView.vue') },
 
     { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('@/views/NotFound.vue') }
-  ]
+  ],
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) {
+      return savedPosition
+    } else {
+      return { top: 0 }
+    }
+  }
 })
 
 // 전역 가드

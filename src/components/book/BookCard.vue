@@ -65,9 +65,12 @@ const wishlist = useWishlistStore()
       <!-- Buttons -->
       <div class="w-full flex flex-col gap-2 mt-auto">
         <!-- Read Now -->
-        <button class="w-full py-2 bg-white text-black rounded-full text-xs font-bold hover:bg-neutral-200 transition-colors">
+        <router-link
+          :to="{ name: 'book-detail', params: { id: props.book.id } }"
+          class="block w-full py-2 bg-white text-black rounded-full text-xs font-bold hover:bg-neutral-200 transition-colors"
+        >
           바로 읽기
-        </button>
+        </router-link>
 
         <!-- Wishlist -->
         <button
