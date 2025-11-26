@@ -13,20 +13,16 @@
 body {
   font-family: 'Arial', sans-serif;
   line-height: 1.5;
-  background-color: #000;  /* 배경을 검은색으로 설정 */
-  color: #fff;  /* 기본 텍스트 색상 흰색 */
+  background-color: #000; /* 배경을 검은색으로 설정 */
+  color: #fff; /* 기본 텍스트 색상 흰색 */
   -webkit-font-smoothing: antialiased; /* 폰트 렌더링 최적화 */
   -moz-osx-font-smoothing: grayscale; /* 폰트 렌더링 최적화 */
 }
 
 /* 링크 기본 스타일 설정 */
 a {
-  color: inherit;  /* 링크 색상 상속 */
-  text-decoration: none;  /* 밑줄 제거 */
-}
-
-a:hover {
-  text-decoration: underline;  /* hover 시 밑줄 추가 */
+  color: #fff; /* 링크 색상 상속 */
+  text-decoration: none; /* 밑줄 제거 */
 }
 
 /* 입력 필드와 버튼의 기본 스타일 */
@@ -49,11 +45,21 @@ select {
 }
 
 /* 기본적으로 block-level 요소의 margin-bottom을 제거 */
-h1, h2, h3, h4, h5, h6,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
 p,
-ul, ol, li,
-figure, blockquote,
-dl, dt, dd {
+ul,
+ol,
+li,
+figure,
+blockquote,
+dl,
+dt,
+dd {
   margin-bottom: 0;
   padding-bottom: 0;
 }
@@ -69,7 +75,12 @@ body {
 /* 3. 기본 텍스트 스타일 */
 
 /* 기본 텍스트 색상을 흰색으로 설정 */
-h1, h2, h3, h4, h5, h6,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
 p,
 li {
   color: #fff;
@@ -84,12 +95,12 @@ button {
 
 /* 링크 기본 스타일 */
 a {
-  color: #00f;
+  color: #fff;
   text-decoration: none;
 }
 
 a:hover {
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 /* 5. 화면 크기 리셋 (반응형을 위한 초기 설정) */
@@ -99,6 +110,6 @@ html {
 
 @media (max-width: 768px) {
   html {
-    font-size: 14px;  /* 모바일에서 폰트 크기 조금 작게 */
+    font-size: 14px; /* 모바일에서 폰트 크기 조금 작게 */
   }
 }

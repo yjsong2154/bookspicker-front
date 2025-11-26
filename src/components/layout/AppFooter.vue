@@ -14,14 +14,14 @@
         <div class="grid grid-cols-2 gap-6 text-sm md:grid-cols-3">
           <div class="space-y-2">
             <h3 class="text-neutral-300 font-semibold">서비스</h3>
-            <router-link to="/best-seller" class="block hover:text-white">베스트 셀러</router-link>
-            <router-link to="/wishlist" class="block hover:text-white">찜한 도서</router-link>
-            <router-link to="/library" class="block hover:text-white">내 서재</router-link>
+            <router-link to="/best-seller" class="block text-white hover:scale-105">베스트 셀러</router-link>
+            <router-link to="/wishlist" class="block text-white hover:scale-105">찜한 도서</router-link>
+            <router-link to="/library" class="block text-white hover:scale-105">내 서재</router-link>
           </div>
           <div class="space-y-2">
             <h3 class="text-neutral-300 font-semibold">정책</h3>
-            <router-link to="/terms" class="block hover:text-white">이용약관</router-link>
-            <router-link to="/privacy" class="block hover:text-white">개인정보 처리방침</router-link>
+            <router-link to="/terms" class="block text-white hover:scale-105">이용약관</router-link>
+            <router-link to="/privacy" class="block text-white hover:scale-105">개인정보 처리방침</router-link>
           </div>
         </div>
       </div>

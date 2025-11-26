@@ -17,14 +17,35 @@ function onSearch(e: Event) {
         <!-- 로고 -->
         <router-link to="/" class="flex items-center gap-2">
           <span class="inline-flex h-6 w-6 rounded-md bg-yellow-400"></span>
-          <span class="font-extrabold tracking-tight">BOOKSPICKER</span>
+          <span class="font-extrabold tracking-tight text-white">BOOKSPICKER</span>
         </router-link>
 
         <!-- 메뉴 -->
-        <ul class="hidden md:flex items-center gap-5 text-sm text-neutral-300">
-          <li><router-link to="/best-seller" class="hover:text-white">베스트 셀러</router-link></li>
-          <li><router-link to="/wishlist" class="hover:text-white">짬한 도서</router-link></li>
-          <li><router-link to="/library" class="hover:text-white">내 서재</router-link></li>
+        <ul class="hidden md:flex items-center gap-5 text-sm font-medium">
+          <li>
+            <router-link
+              to="/best-seller"
+              class="inline-block transition-transform duration-200 text-white hover:scale-105"
+            >
+              많이 읽힌 책
+            </router-link>
+          </li>
+          <li>
+            <router-link
+              to="/wishlist"
+              class="inline-block transition-transform duration-200 text-white hover:scale-105"
+            >
+              찜한 도서
+            </router-link>
+          </li>
+          <li>
+            <router-link
+              to="/library"
+              class="inline-block transition-transform duration-200 text-white hover:scale-105"
+            >
+              내 서재
+            </router-link>
+          </li>
         </ul>
 
         <!-- 우측: 검색 + 프로필 -->
@@ -44,11 +65,13 @@ function onSearch(e: Event) {
             </button>
           </form>
 
-          <!-- 프로필 자리 표시자 -->
+          <!-- 프로필 아이콘 -->
           <router-link to="/profile"
-            class="h-8 w-8 rounded-full bg-neutral-800 ring-1 ring-neutral-700 hover:bg-neutral-700 grid place-items-center"
+            class="h-8 w-8 rounded-full bg-neutral-800 ring-1 ring-neutral-700 hover:bg-neutral-700 grid place-items-center text-neutral-400 hover:text-white transition-colors"
             aria-label="profile">
-            <!-- 아이콘 있으면 넣어도 됨 -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            </svg>
           </router-link>
 
           <!-- 모바일 메뉴 아이콘 (옵션) -->

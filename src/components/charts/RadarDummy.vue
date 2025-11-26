@@ -56,9 +56,17 @@ function p(angleIdx: number, rRatio: number) {
   return { x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r }
 }
 
-function polyPoints() {
-  return currentValues.value.map((v, i) => {
-    const { x, y } = p(i, Math.max(0, Math.min(1, v / 100)))
+function polyPoints(values: number[], maxVal: number = 100) {
+  return values.map((v, i) => {
+    const { x, y } = p(i, Math.max(0, Math.min(1, v / maxVal)))
+    return `${x},${y}`
+  }).join(' ')
+}
+
+// 그리드 링을 위한 포인트 생성 함수
+function gridPoints(ratio: number) {
+  return props.categories.map((_, i) => {
+    const { x, y } = p(i, ratio)
     return `${x},${y}`
   }).join(' ')
 }
@@ -66,9 +74,9 @@ function polyPoints() {
 
 <template>
   <svg :viewBox="`0 0 ${size} ${size}`" class="w-full h-auto">
-    <!-- 그리드 링 -->
+    <!-- 그리드 폴리곤 -->
     <g v-for="r in rings" :key="r">
-      <circle :cx="cx" :cy="cy" :r="(radius / rings) * r" class="fill-none stroke-neutral-800" />
+      <polygon :points="gridPoints(r / rings)" class="fill-none stroke-neutral-800" />
     </g>
 
     <!-- 축 라인 + 라벨 -->
@@ -76,22 +84,22 @@ function polyPoints() {
       <line
         :x1="cx" :y1="cy"
         :x2="p(i,1).x" :y2="p(i,1).y"
-        class="stroke-neutral-700"
+        class="stroke-neutral-800"
       />
       <text
-        :x="p(i,1.12).x" :y="p(i,1.12).y"
-        class="fill-neutral-300 text-[10px]"
+        :x="p(i,1.15).x" :y="p(i,1.15).y"
+        class="fill-neutral-400 text-[11px]"
         text-anchor="middle" dominant-baseline="middle"
       >{{ c }}</text>
     </g>
 
     <!-- 데이터 폴리곤 -->
-    <polygon :points="polyPoints()" class="fill-cyan-500/30 stroke-cyan-400" />
+    <polygon :points="polyPoints(currentValues)" class="fill-teal-500/30 stroke-teal-500" stroke-width="2" />
     <!-- 데이터 점 -->
     <g v-for="(v,i) in currentValues" :key="i">
       <circle :cx="p(i, Math.max(0, Math.min(1, v/100))).x"
               :cy="p(i, Math.max(0, Math.min(1, v/100))).y"
-              r="3" class="fill-cyan-300" />
+              r="3" class="fill-teal-300" />
     </g>
   </svg>
 </template>
