@@ -1,7 +1,13 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
 
-type User = { id: string; email: string; nickname?: string; name: string }
+type User = {
+  id: string;
+  email: string;
+  nickname?: string;
+  name: string;
+  is_coldstart_completed?: boolean;
+}
 type AuthState = {
   token: string | null
   refreshToken: string | null
@@ -36,6 +42,17 @@ export const useAuthStore = defineStore('auth', {
         refreshToken: this.refreshToken,
         user: this.user
       }))
+    },
+    async checkAuth(accountApi: any) {
+      if (!this.token) return
+      try {
+        const res = await accountApi.getMe()
+        this.user = res.data.user
+        this.persist()
+      } catch (err) {
+        console.error('Failed to check auth', err)
+        // 토큰 만료 등의 처리 (필요시 로그아웃)
+      }
     },
     async login(email: string, password: string) {
       // TODO: 실제 API로 교체 (아래는 데모용)

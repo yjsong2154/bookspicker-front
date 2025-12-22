@@ -6,8 +6,8 @@ import AppFooter from '@/components/layout/AppFooter.vue'
 
 <template>
   <div class="min-h-screen bg-black text-white">
-    <AppHeader />
+    <AppHeader v-if="$route.name !== 'cold-start'" />
     <router-view />
-    <AppFooter />
+    <AppFooter v-if="$route.name !== 'cold-start'" />
   </div>
 </template>

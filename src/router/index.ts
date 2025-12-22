@@ -9,7 +9,7 @@ const router = createRouter({
 
     // 보호 라우트들
     { path: '/', name: 'home', component: () => import('@/views/HomeView.vue'), meta: { requiresAuth: true } },
-    { path: '/book/:id', name: 'book-detail', component: () => import('@/views/HomeView.vue'), props: true,},
+    { path: '/book/:id', name: 'book-detail', component: () => import('@/views/HomeView.vue'), props: true, },
     { path: '/best-seller', name: 'best-seller', component: () => import('@/views/BestSellerView.vue'), meta: { requiresAuth: true } },
     { path: '/wishlist', name: 'wishlist', component: () => import('@/views/WishlistView.vue'), meta: { requiresAuth: true } },
     { path: '/library', name: 'library', component: () => import('@/views/LibraryView.vue'), meta: { requiresAuth: true } },
@@ -20,6 +20,9 @@ const router = createRouter({
     { path: '/terms', name: 'terms', component: () => import('@/views/TermsView.vue') },
     { path: '/privacy', name: 'privacy', component: () => import('@/views/PrivacyView.vue') },
     { path: '/google-login', name: 'google-login', component: () => import('@/views/GoogleLoginCallback.vue') },
+
+    // 콜드 스타트 (신규 사용자 정보 입력)
+    { path: '/cold-start', name: 'cold-start', component: () => import('@/views/ColdStartView.vue'), meta: { requiresAuth: true } },
 
     { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('@/views/NotFound.vue') }
   ]
@@ -37,6 +40,11 @@ router.beforeEach((to) => {
   // 보호 라우트 접근 시
   if (to.meta.requiresAuth && !auth.isAuthed) {
     return { name: 'login', query: { redirect: to.fullPath } }
+  }
+
+  // 로그인 상태인데 콜드스타트 미완료 유저라면 콜드 스타트로 리다이렉트 (콜드 스타트 페이지 제외)
+  if (auth.isAuthed && auth.user?.is_coldstart_completed === false && to.name !== 'cold-start') {
+    return { name: 'cold-start' }
   }
 })
 
