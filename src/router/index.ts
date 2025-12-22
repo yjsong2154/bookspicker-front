@@ -19,6 +19,7 @@ const router = createRouter({
     // 공개 페이지(약관/개인정보)
     { path: '/terms', name: 'terms', component: () => import('@/views/TermsView.vue') },
     { path: '/privacy', name: 'privacy', component: () => import('@/views/PrivacyView.vue') },
+    { path: '/google-login', name: 'google-login', component: () => import('@/views/GoogleLoginCallback.vue') },
 
     { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('@/views/NotFound.vue') }
   ]

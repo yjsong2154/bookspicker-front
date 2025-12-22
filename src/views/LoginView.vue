@@ -1,30 +1,35 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
 // import { useAuthStore } from '@/stores/auth'
 
-const route = useRoute()
-const router = useRouter()
+// const route = useRoute()
+// const router = useRouter()
 // const auth = useAuthStore()
 
 const loading = ref(false)
 const errorMsg = ref<string | null>(null)
 
+const GOOGLE_CLIENT_ID = '34425994510-sar5l4o8k5hpdvh6fc9tt8s43i95adgp.apps.googleusercontent.com'
+const GOOGLE_REDIRECT_URI = 'http://localhost:5173/google-login'
+
 async function onGoogleLogin() {
   errorMsg.value = null
   loading.value = true
   try {
-    // TODO: 구글 로그인 연동
-    // await auth.loginWithGoogle()
-    const to = (route.query.redirect as string) || { name: 'home' }
-    router.replace(to)
+    const url = 'https://accounts.google.com/o/oauth2/v2/auth?client_id=' +
+       GOOGLE_CLIENT_ID +
+       '&redirect_uri=' +
+       GOOGLE_REDIRECT_URI +
+       '&response_type=code' +
+       '&scope=email profile openid'
+
+    window.location.href = url
   } catch (e: unknown) {
     if (e instanceof Error) {
       errorMsg.value = e.message
     } else {
       errorMsg.value = '로그인 실패'
     }
-  } finally {
     loading.value = false
   }
 }
@@ -68,9 +73,9 @@ async function onGoogleLogin() {
         <div v-if="errorMsg" class="text-sm text-red-400">{{ errorMsg }}</div>
       </div>
 
-      <div class="mt-4 flex items-center justify-center text-sm text-neutral-400">
+      <!-- <div class="mt-4 flex items-center justify-center text-sm text-neutral-400">
         <router-link to="/signup" class="hover:text-white">회원가입</router-link>
-      </div>
+      </div> -->
     </div>
   </main>
 </template>

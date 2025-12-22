@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import axios from 'axios'
 
 type User = { id: string; email: string; name: string }
 type AuthState = {
@@ -36,6 +37,27 @@ export const useAuthStore = defineStore('auth', {
       this.token = 'fake-jwt-token'
       this.user = { id: 'u1', email, name: email.split('@')[0] ?? '' }
       this.persist()
+    },
+    async loginWithGoogle(code: string) {
+      try {
+        const res = await axios.post('http://127.0.0.1:8000/accounts/social-login/', { code })
+        const { token, user } = res.data
+        console.log('🔥 Login Success!')
+        console.log('User:', user)
+        console.log('Access Token:', token.access)
+        console.log('Refresh Token:', token.refresh)
+        this.token = token.access // simplified for now, usually access/refresh
+        this.user = user
+        this.persist()
+        return true
+      } catch (err: unknown) {
+        console.error('Google Login Error', err)
+        let msg = '구글 로그인 실패'
+        if (axios.isAxiosError(err) && err.response?.data?.message) {
+          msg = err.response.data.message
+        }
+        throw new Error(msg)
+      }
     },
     logout() {
       this.token = null
