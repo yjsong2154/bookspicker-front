@@ -1,28 +1,26 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 // import { useAuthStore } from '@/stores/auth'
 
-const route = useRoute()
 const router = useRouter()
-// const auth = useAuthStore()
+// const auth = useAuthStore() // Will be used later
 
 const loading = ref(false)
 const errorMsg = ref<string | null>(null)
 
-async function onGoogleLogin() {
+async function onGoogleSignUp() {
   errorMsg.value = null
   loading.value = true
   try {
-    // TODO: 구글 로그인 연동
-    // await auth.loginWithGoogle()
-    const to = (route.query.redirect as string) || { name: 'home' }
-    router.replace(to)
+    // TODO: 구글 회원가입 연동
+    // await auth.signUpWithGoogle()
+    router.replace({ name: 'home' })
   } catch (e: unknown) {
     if (e instanceof Error) {
       errorMsg.value = e.message
     } else {
-      errorMsg.value = '로그인 실패'
+      errorMsg.value = '회원가입 실패'
     }
   } finally {
     loading.value = false
@@ -34,12 +32,12 @@ async function onGoogleLogin() {
   <main class="min-h-[80vh] grid place-items-center px-4">
     <div class="w-full max-w-md rounded-2xl bg-neutral-900 p-8 ring-1 ring-neutral-800">
       <h1 class="mb-6 text-center text-2xl font-extrabold text-white">
-        나도 몰랐던<br/>내가 좋아하는 책 찾기
+        나만의 서재를<br/>만들어보세요
       </h1>
 
       <div class="space-y-3">
         <button
-          @click="onGoogleLogin"
+          @click="onGoogleSignUp"
           :disabled="loading"
           class="w-full flex items-center justify-center gap-3 rounded-md bg-white py-2.5 font-semibold text-gray-900 transition hover:bg-gray-100 disabled:opacity-60"
         >
@@ -62,14 +60,15 @@ async function onGoogleLogin() {
               fill="#EA4335"
             />
           </svg>
-          Google로 로그인
+          Google로 회원가입
         </button>
 
         <div v-if="errorMsg" class="text-sm text-red-400">{{ errorMsg }}</div>
       </div>
 
       <div class="mt-4 flex items-center justify-center text-sm text-neutral-400">
-        <router-link to="/signup" class="hover:text-white">회원가입</router-link>
+        <span class="mr-1">이미 계정이 있으신가요?</span>
+        <router-link to="/login" class="hover:text-white">로그인</router-link>
       </div>
     </div>
   </main>
