@@ -1,16 +1,21 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
 
-type User = { id: string; email: string; name: string }
+type User = { id: string; email: string; nickname?: string; name: string }
 type AuthState = {
   token: string | null
+  refreshToken: string | null
   user: User | null
 }
 
 const STORAGE_KEY = 'auth_v1'
 
 export const useAuthStore = defineStore('auth', {
-  state: (): AuthState => ({ token: null, user: null }),
+  state: (): AuthState => ({
+    token: null,
+    refreshToken: null,
+    user: null
+  }),
   getters: {
     isAuthed: (s) => !!s.token && !!s.user,
   },
@@ -19,14 +24,17 @@ export const useAuthStore = defineStore('auth', {
       try {
         const raw = localStorage.getItem(STORAGE_KEY)
         if (!raw) return
-        const { token, user } = JSON.parse(raw)
+        const { token, refreshToken, user } = JSON.parse(raw)
         this.token = token ?? null
-        this.user  = user  ?? null
-      } catch {}
+        this.refreshToken = refreshToken ?? null
+        this.user = user ?? null
+      } catch { }
     },
     persist() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        token: this.token, user: this.user
+        token: this.token,
+        refreshToken: this.refreshToken,
+        user: this.user
       }))
     },
     async login(email: string, password: string) {
@@ -46,7 +54,8 @@ export const useAuthStore = defineStore('auth', {
         console.log('User:', user)
         console.log('Access Token:', token.access)
         console.log('Refresh Token:', token.refresh)
-        this.token = token.access // simplified for now, usually access/refresh
+        this.token = token.access
+        this.refreshToken = token.refresh
         this.user = user
         this.persist()
         return true
@@ -61,8 +70,14 @@ export const useAuthStore = defineStore('auth', {
     },
     logout() {
       this.token = null
+      this.refreshToken = null
       this.user = null
       localStorage.removeItem(STORAGE_KEY)
     },
+    async resign(api: any) {
+      if (!this.refreshToken) throw new Error('Refresh token missing')
+      await api.resign({ confirm: true, refresh: this.refreshToken })
+      this.logout()
+    }
   }
 })

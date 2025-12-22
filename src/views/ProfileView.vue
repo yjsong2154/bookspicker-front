@@ -5,34 +5,97 @@ import { useRouter } from 'vue-router'
 import RadarDummy from '@/components/charts/RadarDummy.vue'
 import ProfileBookList from '@/components/profile/ProfileBookList.vue'
 import ProfileReviewList from '@/components/profile/ProfileReviewList.vue'
+import { accountApi } from '@/api/accounts'
 
 const auth = useAuthStore()
 const router = useRouter()
 
-// 로그인 상태 보장 (새로고침 대비)
+// 폼 상태
+const email = ref<string>(auth.user?.email ?? '')
+const nickname = ref<string>(auth.user?.nickname || auth.user?.name || '')
+const isEditingNickname = ref(false)
+
+// 내가 쓴 리뷰 (API 연동)
+const myReviews = ref<any[]>([])
+const reviewLoading = ref(false)
+const reviewError = ref(false)
+
+async function fetchMyReviews() {
+  reviewLoading.value = true
+  reviewError.value = false
+  try {
+    const res = await accountApi.getComments({ limit: 5 })
+    // API 응답 구조를 컴포넌트 형식에 맞게 변환
+    myReviews.value = res.data.comments.map((c: any) => ({
+      title: c.book.title,
+      author: '', // API에서 저자 정보를 따로 주지 않으므로 일단 비움
+      publisher: c.book.publisher,
+      date: new Date(c.created_at).toLocaleDateString(),
+      content: c.content
+    }))
+  } catch (err) {
+    console.error('Failed to fetch reviews:', err)
+    reviewError.value = true
+  } finally {
+    reviewLoading.value = false
+  }
+}
+
 onMounted(() => {
   if (!auth.user || !auth.token) auth.loadFromStorage()
-  if (!auth.user || !auth.token) router.replace({ name: 'login', query: { redirect: '/profile' } })
+  if (!auth.user || !auth.token) {
+    router.replace({ name: 'login', query: { redirect: '/profile' } })
+  } else {
+    fetchMyReviews()
+    // 초기값 동기화
+    email.value = auth.user.email
+    nickname.value = auth.user.nickname || auth.user.name
+  }
 })
 
-// 폼 상태 (이메일은 읽기 전용, 닉네임만 편집)
-const email = ref<string>(auth.user?.email ?? '')
-const nickname = ref<string>(auth.user?.name ?? '')
-
-function saveAll() {
-  // 닉네임만 변경
+async function saveNickname() {
   if (!auth.user) return
-  const next = nickname.value?.trim() || auth.user.name
-  auth.user = { ...auth.user, name: next }
-  auth.persist()
-  // 폼에 반영
-  nickname.value = auth.user.name
-  alert('저장되었습니다.')
+  if (!isEditingNickname.value) {
+    isEditingNickname.value = true
+    return
+  }
+
+  const next = nickname.value?.trim()
+  if (!next) {
+    alert('닉네임을 입력해주세요.')
+    return
+  }
+
+  try {
+    await accountApi.updateNickname({ nickname: next })
+    auth.user = { ...auth.user, name: next, nickname: next }
+    auth.persist()
+    isEditingNickname.value = false
+    alert('닉네임이 변경되었습니다.')
+  } catch (err) {
+    console.error('Failed to update nickname:', err)
+    alert('닉네임 변경에 실패했습니다.')
+  }
 }
 
 function logout() {
-  auth.logout()
-  router.replace({ name: 'login' })
+  if (confirm('로그아웃 하시겠습니까?')) {
+    auth.logout()
+    router.replace({ name: 'login' })
+  }
+}
+
+async function withdraw() {
+  if (!confirm('정말로 탈퇴하시겠습니까? 모든 정보가 삭제됩니다.')) return
+
+  try {
+    await auth.resign(accountApi)
+    alert('회원 탈퇴가 완료되었습니다.')
+    router.replace({ name: 'login' })
+  } catch (err) {
+    console.error('Withdrawal failed:', err)
+    alert('회원 탈퇴 중 오류가 발생했습니다.')
+  }
 }
 
 // 레이더 더미 데이터
@@ -56,31 +119,6 @@ const likedBooks = [
   { title: '나나 올리브에게', author: '루리', publisher: '문학동네' },
   { title: '나나 올리브에게', author: '루리', publisher: '문학동네' },
 ]
-
-// 더미 데이터: 내가 쓴 리뷰
-const myReviews = [
-  {
-    title: '나나 올리브에게',
-    author: '루리',
-    publisher: '문학동네',
-    date: '2025-02-01',
-    content: '책은 끝까지 읽고 나니 마음에 잔잔한 여운이 남네요. 읽는 동안 참 많은 생각이 스쳐 지나갔어요. 마지막 페이지를 덮고도 한참 여운이 남는 책이었습니다. 좋은 시간 보냈습니다.'
-  },
-  {
-    title: '나나 올리브에게',
-    author: '루리',
-    publisher: '문학동네',
-    date: '2025-02-01',
-    content: '책은 끝까지 읽고 나니 마음에 잔잔한 여운이 남네요. 읽는 동안 참 많은 생각이 스쳐 지나갔어요. 마지막 페이지를 덮고도 한참 여운이 남는 책이었습니다. 좋은 시간 보냈습니다.'
-  },
-  {
-    title: '나나 올리브에게',
-    author: '루리',
-    publisher: '문학동네',
-    date: '2025-02-01',
-    content: '책은 끝까지 읽고 나니 마음에 잔잔한 여운이 남네요. 읽는 동안 참 많은 생각이 스쳐 지나갔어요. 마지막 페이지를 덮고도 한참 여운이 남는 책이었습니다. 좋은 시간 보냈습니다.'
-  },
-]
 </script>
 
 <template>
@@ -102,12 +140,20 @@ const myReviews = [
           <!-- 정보 필드 -->
           <div class="w-full max-w-sm space-y-4">
             <div class="flex items-center justify-between">
-              <div class="flex items-center gap-4">
-                <span class="text-sm font-bold w-12 text-neutral-400">닉네임</span>
-                <span class="text-lg font-medium">{{ nickname || '닉네임 없음' }}</span>
+              <div class="flex items-center gap-4 flex-1 mr-4">
+                <span class="text-sm font-bold w-12 text-neutral-400 shrink-0">닉네임</span>
+                <input
+                  v-if="isEditingNickname"
+                  v-model="nickname"
+                  type="text"
+                  class="bg-neutral-800 border border-neutral-700 rounded px-2 py-1 text-sm text-white w-full focus:outline-none focus:border-neutral-500"
+                  @keyup.enter="saveNickname"
+                  placeholder="새 닉네임 입력"
+                />
+                <span v-else class="text-lg font-medium truncate">{{ nickname || '닉네임 없음' }}</span>
               </div>
-              <button @click="saveAll" class="px-3 py-1 rounded-full border border-neutral-600 text-xs text-neutral-400 hover:bg-neutral-800 transition-colors">
-                변경
+              <button @click="saveNickname" class="px-3 py-1 rounded-full border border-neutral-600 text-xs text-neutral-400 hover:bg-neutral-800 transition-colors shrink-0">
+                {{ isEditingNickname ? '저장' : '변경' }}
               </button>
             </div>
             <div class="flex items-center justify-between">
@@ -150,7 +196,21 @@ const myReviews = [
 
       <!-- 하단: 리뷰 리스트 -->
       <div class="border-t border-neutral-800 pt-12">
-        <ProfileReviewList :reviews="myReviews" />
+        <ProfileReviewList
+          :reviews="myReviews"
+          :loading="reviewLoading"
+          :error="reviewError"
+        />
+      </div>
+
+      <!-- 탈퇴 버튼 -->
+      <div class="mt-20 flex justify-center border-t border-neutral-900 pt-10 pb-20">
+        <button
+          @click="withdraw"
+          class="text-xs text-neutral-700 hover:text-red-900/50 transition-colors"
+        >
+          회원 탈퇴
+        </button>
       </div>
 
     </div>
