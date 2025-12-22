@@ -5,7 +5,7 @@ import { useBookStore } from '@/stores/book'
 import BookCard from '@/components/book/BookCard.vue'
 import Skeleton from '@/components/ui/Skeleton.vue'
 
-const props = defineProps<{ title: string }>()
+defineProps<{ title: string }>()
 const store = useBookStore()
 
 const railRef = ref<HTMLDivElement | null>(null)
@@ -141,7 +141,7 @@ const scrollRight = () => {
 .bookWrapper {
   scroll-snap-align: start;
   width: 240px; /* 책 카드의 너비 240px */
-  height: 400px; /* 책 카드 높이 설정 */
+  height: 480px; /* 책 카드 높이 설정 (400 -> 480으로 증가) */
   flex-shrink: 0; /* 가로 스크롤 시 축소되지 않도록 설정 */
 }
 </style>
