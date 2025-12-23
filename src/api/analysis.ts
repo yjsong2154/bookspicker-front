@@ -15,6 +15,16 @@ export interface AnalysisResponse {
   vector: number[]
 }
 
+export interface AnalysisSaveRequest {
+  isbn: string
+  title: string
+  author: string
+  description: string
+  publication_year: string
+  vector: number[]
+  tags: string[]
+}
+
 export const analysisApi = {
   analyzeEpub: (file: File) => {
     const formData = new FormData()
@@ -23,4 +33,7 @@ export const analysisApi = {
       timeout: 300000 // 5 minutes
     })
   },
+  saveAnalysisData: (data: AnalysisSaveRequest) => {
+    return analysisApiInstance.post('/analysis/books', data)
+  }
 }

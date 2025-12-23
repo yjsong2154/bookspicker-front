@@ -233,7 +233,32 @@ const save = async () => {
   try {
       const resp = await api.post('/api/admin/books/', payload)
       if (resp.status === 201) {
-          alert('저장되었습니다.')
+
+          // 2. Save to Analysis Server
+          try {
+              // Construct author string (e.g., "Kim, Lee, Park")
+              const authorNames = authors.value.filter(a => a.role === '글쓴이').map(a => a.name).join(', ')
+
+              const analysisPayload = {
+                  isbn: metaInfo.value.isbn,
+                  title: metaInfo.value.title,
+                  author: authorNames || 'Unknown',
+                  description: metaInfo.value.longDescription || '',
+                  publication_year: formattedDate.substring(0, 4),
+                  vector: aiContent.value.vector,
+                  tags: aiContent.value.tags
+              }
+
+              await analysisApi.saveAnalysisData(analysisPayload)
+              console.log('Analysis Data Saved')
+
+          } catch (aiErr) {
+              console.error('Analysis Server Save Failed:', aiErr)
+              alert('백엔드 저장 성공, AI 서버 저장 실패')
+              return
+          }
+
+          alert('모든 데이터가 저장되었습니다.')
           /* Optional: Navigate away or reset form */
       }
   } catch (e: unknown) {
