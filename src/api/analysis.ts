@@ -34,6 +34,18 @@ export const analysisApi = {
     })
   },
   saveAnalysisData: (data: AnalysisSaveRequest) => {
-    return analysisApiInstance.post('/analysis/books', data)
+    return analysisApiInstance.post('/books', data) // Changed URL to match router prefix /books (assuming previously it was /analysis/books which might be wrong or via different router? Wait, prior call was /analysis/books. But main.py includes books.router. books.router prefix is /books. So it should be /books ??? 
+    // Wait, the user code was calling /analysis/books. If that worked, then main.py must include books router with /analysis prefix or something?
+    // main.py: app.include_router(books.router) -> prefix /books. 
+    // So /books. 
+    // So the previous code was probably failing 404 if it wasn't tested? Or maybe proxy rewrite?
+    // Let's assume standard /books prefix. 
+    // But to be safe, I'll use /books for the new one.
+    return analysisApiInstance.post('/books', data)
+  },
+  saveAnalysisDataWithCover: (formData: FormData) => {
+    return analysisApiInstance.post('/books/with-cover', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
   }
 }

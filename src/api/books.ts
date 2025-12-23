@@ -3,7 +3,7 @@ import type { Book } from '@/types/book'
 
 
 export interface BookComment {
-  id: number
+  comment_id: number
   content: string
   created_at: string
   user?: {
@@ -82,4 +82,6 @@ export const bookApi = {
   addToLibrary: (isbn: string) => api.post(`/api/books/${isbn}/library/`),
   getPopularBooks: (period: 'monthly' | 'weekly' | 'steady' = 'monthly') => api.get<{ message: string; items: PopularBook[] }>(`/api/books/popular/?q=${period}`),
   searchBooks: (query: string) => api.get<{ message: string; books: Book[] }>(`/api/books/search/`, { params: { q: query } }),
+  updateComment: (isbn: string, commentId: number, data: { content: string }) => api.put<BookComment>(`/api/books/${isbn}/comment/${commentId}/edit/`, data),
+  deleteComment: (isbn: string, commentId: number) => api.delete<{ detail: string }>(`/api/books/${isbn}/comment/${commentId}/delete/`),
 }

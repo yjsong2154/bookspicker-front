@@ -35,12 +35,52 @@ interface Author {
   role: string
 }
 
-const authors = ref<Author[]>([
-  { id: 1, name: '김지혜', role: '글쓴이' },
-  { id: 2, name: '김지훈', role: '글쓴이' },
-  { id: 3, name: '김아영', role: '그린이' },
-  { id: 4, name: '김민지', role: '옮긴이' }
-])
+const authors = ref<Author[]>([])
+
+// --- Author Search Logic ---
+const authorSearchQuery = ref('')
+const authorSearchResults = ref<any[]>([])
+
+const searchAuthors = async () => {
+    try {
+        const query = authorSearchQuery.value.trim()
+        const resp = await api.get('/api/admin/authors/', { params: { name: query } })
+        authorSearchResults.value = resp.data
+    } catch (e) {
+        console.error('Author Search Failed:', e)
+    }
+}
+
+const selectAuthor = (authorData: any) => {
+    // Check duplicate
+    if (authors.value.find(a => a.id === authorData.id)) {
+        alert('이미 추가된 작가입니다.')
+        return
+    }
+    authors.value.push({
+        id: authorData.id,
+        name: authorData.name,
+        role: '글쓴이' // default
+    })
+    // Clear search
+    // authorSearchResults.value = []
+    // authorSearchQuery.value = ''
+}
+
+const createAuthor = async () => {
+    if (!confirm(`"${authorSearchQuery.value}" 작가를 새로 생성하시겠습니까?`)) return
+
+    try {
+        const resp = await api.post('/api/admin/authors/', { name: authorSearchQuery.value })
+        const newAuthor = resp.data.author
+        selectAuthor(newAuthor)
+        alert('작가가 생성되고 추가되었습니다.')
+        searchAuthors() // refresh list
+    } catch (e) {
+        console.error('Create Author Failed:', e)
+        alert('작가 생성 실패')
+    }
+}
 
 // AI Content
 const aiContent = ref({
@@ -58,15 +98,15 @@ const handleCoverUpload = (event: Event) => {
   const file = (event.target as HTMLInputElement).files?.[0]
   if (file) {
       coverFile.value = file
-      metaInfo.value.coverUrl = `http://temp/${file.name}` // Dummy URL
+      metaInfo.value.coverUrl = URL.createObjectURL(file) // Preview URL
   }
 }
 
-const handleEpubSelection = (event: Event) => { // Renamed from handleEpubAnalysis if it was for *selection*
+const handleEpubSelection = (event: Event) => {
   const file = (event.target as HTMLInputElement).files?.[0]
   if (file) {
       epubFile.value = file
-      metaInfo.value.epubUrl = `http://temp/${file.name}` // Dummy URL
+      metaInfo.value.epubUrl = file.name // Just show name
   }
 }
 
@@ -85,9 +125,7 @@ const runAiAnalysis = async () => {
     // 3. Update State
     const { tags, vector } = response.data
     if (tags) {
-    if (tags) {
         aiContent.value.tags = processTags(tags)
-    }
     }
     if (vector) {
         aiContent.value.vector = vector
@@ -198,7 +236,7 @@ const save = async () => {
       return
   }
 
-  // Payload Construction
+  // Payload Construction (Exclude Files)
   const payload = {
       isbn: metaInfo.value.isbn,
       title: metaInfo.value.title,
@@ -210,8 +248,8 @@ const save = async () => {
       lang: metaInfo.value.language,
       purchase_link: metaInfo.value.buyUrl,
       genre_child_id: Number(metaInfo.value.genreId), // Ensure number
-      cover_image: metaInfo.value.coverUrl,
-      epub_file: metaInfo.value.epubUrl,
+      // cover_image: handled via file
+      // epub_file: handled via file
 
       // New Fields
       abstract_descript: metaInfo.value.shortDescription,
@@ -221,36 +259,66 @@ const save = async () => {
 
       // Complex Fields (Mocking logic for now as requested)
       toc: metaInfo.value.toc ? [{ "label": "Full Text", "href": "text.html" }] : [], // Simplification
-      contributors: authors.value.map(a => ({
+      contributors: authors.value.map((a, index) => ({
           name: a.name,
-          role: a.role === '글쓴이' ? 'AUTHOR' : (a.role === '옮긴이' ? 'TRANSLATOR' : (a.role === '그림' ? 'ILLUSTRATOR' : 'ETC')),
-          is_primary: a.id === 1 // Mock primary logic: first one is primary
+          role: a.role === '글쓴이' ? 'AUTHOR' : (a.role === '옮긴이' ? 'TRANSLATOR' : (['그림', '그린이', '엮은이', '원작자'].includes(a.role) ? 'ILLUSTRATOR' : 'ETC')),
+          is_primary: index === 0 // Logic: first one is primary
       }))
   }
 
-  console.log('Sending Payload:', payload)
+  const formData = new FormData()
+  // 1. Files
+  if (coverFile.value) {
+      formData.append('cover_image', coverFile.value)
+  } else {
+      // Must provide URL if no file? For now assuming file upload required or URL passed in JSON (but we cleared it in payload)
+      // If updating, you might sending existing URL. But this is Create.
+      if (metaInfo.value.coverUrl && metaInfo.value.coverUrl.startsWith('http')) {
+           // Treating as external URL if needed, but backend logic prefers file.
+           // Let's pass it in payload if you want to support external URL without file upload
+           (payload as any).cover_image = metaInfo.value.coverUrl
+      }
+  }
+
+  if (epubFile.value) {
+      formData.append('epub_file', epubFile.value)
+  } else {
+      if (metaInfo.value.epubUrl && metaInfo.value.epubUrl.startsWith('http')) {
+          (payload as any).epub_file = metaInfo.value.epubUrl
+      }
+  }
+
+  // 2. Data
+  formData.append('data', JSON.stringify(payload))
+
+  console.log('Sending FormData')
 
   try {
-      const resp = await api.post('/api/admin/books/', payload)
+      const resp = await api.post('/api/admin/books/', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+      })
       if (resp.status === 201) {
 
           // 2. Save to Analysis Server
           try {
-              // Construct author string (e.g., "Kim, Lee, Park")
+              // Construct author string
               const authorNames = authors.value.filter(a => a.role === '글쓴이').map(a => a.name).join(', ')
-
-              const analysisPayload = {
-                  isbn: metaInfo.value.isbn,
-                  title: metaInfo.value.title,
-                  author: authorNames || 'Unknown',
-                  description: metaInfo.value.longDescription || '',
-                  publication_year: formattedDate.substring(0, 4),
-                  vector: aiContent.value.vector,
-                  tags: aiContent.value.tags
+              
+              const analysisFormData = new FormData()
+              analysisFormData.append('isbn', metaInfo.value.isbn)
+              analysisFormData.append('title', metaInfo.value.title)
+              analysisFormData.append('author', authorNames || 'Unknown')
+              analysisFormData.append('description', metaInfo.value.longDescription || '')
+              analysisFormData.append('published_year', formattedDate.substring(0, 4))
+              analysisFormData.append('tags', JSON.stringify(aiContent.value.tags))
+              analysisFormData.append('embedding', JSON.stringify(aiContent.value.vector))
+              
+              if (coverFile.value) {
+                  analysisFormData.append('cover_image', coverFile.value)
               }
 
-              await analysisApi.saveAnalysisData(analysisPayload)
-              console.log('Analysis Data Saved')
+              await analysisApi.saveAnalysisDataWithCover(analysisFormData)
+              console.log('Analysis Data Saved (with cover)')
 
           } catch (aiErr) {
               console.error('Analysis Server Save Failed:', aiErr)
@@ -264,8 +332,14 @@ const save = async () => {
   } catch (e: unknown) {
       console.error('Save Failed:', e)
       let msg = ''
-      if (axios.isAxiosError(e) && e.response?.data?.message) {
-          msg = e.response.data.message
+      if (axios.isAxiosError(e) && e.response?.data) {
+          msg = e.response.data.message || e.message
+          if (e.response.data.error) {
+             msg += `\nCode: ${e.response.data.error.code}`
+             if (e.response.data.error.details) {
+                 msg += `\nDetails: ${JSON.stringify(e.response.data.error.details, null, 2)}`
+             }
+          }
       } else if (e instanceof Error) {
           msg = e.message
       }
@@ -405,9 +479,8 @@ const save = async () => {
         <div class="flex justify-between items-center mb-6">
              <h2 class="text-xl font-bold border-l-4 border-gray-500 pl-3">작가 정보</h2>
              <div class="flex items-center gap-2">
-                <button @click="addAuthor" class="flex items-center gap-1 bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded text-sm transition">
-                    <span>+</span> 새로운 작가 추가
-                </button>
+                <!-- Direct Add Button (Optional, maybe for completely new author not in DB) -->
+                <!-- <button @click="addAuthor" ...> -->
                 <button class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:text-white transition">?</button>
              </div>
         </div>
@@ -416,29 +489,50 @@ const save = async () => {
             <!-- Author Search/List (Left) -->
              <div class="col-span-4">
                 <div class="flex gap-2 mb-2">
-                    <input type="text" placeholder="김" class="flex-1 bg-transparent border border-gray-600 px-3 py-2 rounded focus:border-white outline-none" />
-                    <button class="bg-gray-300 text-black px-4 py-2 rounded font-bold hover:bg-white transition">추가</button>
+                    <input type="text" v-model="authorSearchQuery" @keyup.enter="searchAuthors" placeholder="작가 이름 검색..." class="flex-1 bg-transparent border border-gray-600 px-3 py-2 rounded focus:border-white outline-none" />
+                    <button @click="searchAuthors" class="bg-gray-300 text-black px-4 py-2 rounded font-bold hover:bg-white transition">검색</button>
                 </div>
-                <div class="border border-gray-600 rounded h-40 overflow-y-auto p-2 text-sm text-gray-300 space-y-1">
-                    <div class="p-1 hover:bg-gray-800 cursor-pointer">김지혜 | ID | 생년월일</div>
-                    <div class="p-1 hover:bg-gray-800 cursor-pointer">김지훈 | ID | 생년월일</div>
-                    <div class="p-1 hover:bg-gray-800 cursor-pointer">김아영 | ID | 생년월일</div>
-                    <div class="p-1 hover:bg-gray-800 cursor-pointer">김민지 | ID | 생년월일</div>
+                <!-- Search Result List -->
+                <div class="border border-gray-600 rounded h-64 overflow-y-auto p-2 text-sm text-gray-300 space-y-1">
+                    <div v-if="authorSearchResults.length === 0" class="p-2 text-center text-gray-500">
+                        검색 결과가 없습니다.
+                    </div>
+                    <div v-for="author in authorSearchResults" :key="author.id" @click="selectAuthor(author)" class="p-2 hover:bg-gray-800 cursor-pointer flex justify-between items-center group">
+                        <span>{{ author.name }}</span>
+                        <span class="text-xs text-gray-500 group-hover:text-white">추가 +</span>
+                    </div>
+                </div>
+                <!-- Quick Create (Optional) -->
+                <div class="mt-2 text-right">
+                     <button @click="createAuthor" class="text-xs text-gray-400 hover:text-white underline">"{{ authorSearchQuery }}" 작가 새로 생성</button>
                 </div>
              </div>
 
              <!-- Selected Authors (Right) -->
              <div class="col-span-8 space-y-3 pt-2">
-                <div v-for="author in authors" :key="author.id" class="flex items-center gap-4 bg-gray-900 border border-gray-700 p-2 rounded-lg">
-                    <div class="w-12 text-center text-xs bg-gray-800 rounded py-1 text-gray-400">대표</div>
-                    <div class="text-gray-400">=</div> <!-- Drag handle icon replacement -->
-                    <input type="text" v-model="author.name" class="flex-1 bg-gray-800 border-none rounded px-3 py-1 outline-none" readonly />
-                    <select v-model="author.role" class="bg-gray-800 text-white border-none rounded px-2 py-1 outline-none text-sm">
+                <div v-if="authors.length === 0" class="text-gray-500 text-center py-10 border border-dashed border-gray-700 rounded">
+                    왼쪽에서 작가를 검색하여 추가해주세요. <br>
+                    (가장 위에 있는 작가가 <strong>대표 작가</strong>로 설정됩니다.)
+                </div>
+                <div v-for="(author, index) in authors" :key="author.id" class="flex items-center gap-4 bg-gray-900 border border-gray-700 p-2 rounded-lg">
+                    <div class="w-12 text-center text-xs rounded py-1" :class="index === 0 ? 'bg-green-800 text-green-200' : 'bg-gray-800 text-gray-500'">
+                        {{ index === 0 ? '대표' : '참여' }}
+                    </div>
+                    <div class="text-gray-400 cursor-move">≡</div> <!-- Placeholder for drag handle -->
+                    
+                    <div class="flex-1">
+                        <div class="text-sm font-bold">{{ author.name }}</div>
+                        <div class="text-xs text-gray-500">ID: {{ author.id }}</div>
+                    </div>
+
+                    <select v-model="author.role" class="bg-gray-800 text-white border border-gray-600 rounded px-2 py-1 outline-none text-sm">
                         <option value="글쓴이">글쓴이</option>
                         <option value="그린이">그린이</option>
                         <option value="옮긴이">옮긴이</option>
+                        <option value="엮은이">엮은이</option>
+                        <option value="원작자">원작자</option>
                     </select>
-                    <button @click="removeAuthor(author.id)" class="px-4 py-1 bg-gray-700 hover:bg-red-900 rounded text-sm transition text-gray-300">삭제</button>
+                    <button @click="removeAuthor(author.id)" class="px-3 py-1 bg-red-900/50 hover:bg-red-900 rounded text-sm transition text-red-200">삭제</button>
                 </div>
              </div>
         </div>
