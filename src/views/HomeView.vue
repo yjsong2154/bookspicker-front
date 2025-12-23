@@ -48,6 +48,7 @@ const fetchBanner = async () => {
     // API returns 'banners' array. User requested to use the first book.
     if (data.banners && data.banners.length > 0) {
       const banner = data.banners[0]!
+      // console.log('Banner',banner)
       // Map Banner response to Book type
       bannerBook.value = {
         id: String(banner.banner_id),
@@ -58,7 +59,7 @@ const fetchBanner = async () => {
         buyUrl: banner.button?.url
       }
       bannerButtonLabel.value = banner.button?.label || '지금 확인하기'
-      console.log('Banner Book Set:', bannerBook.value)
+      // console.log('Banner Book Set:', bannerBook.value)
     }
   } catch (error) {
     console.error('Failed to fetch banner:', error)

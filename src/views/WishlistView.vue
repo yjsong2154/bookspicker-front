@@ -1,23 +1,34 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
-import { useBookStore } from '@/stores/book'
+import type { Book } from '@/types/book'
+import { ref, onMounted } from 'vue'
+import { accountApi } from '@/api/accounts'
 import { useWishlistStore } from '@/stores/wishlist'
-import BookCard from '@/components/book/BookCard.vue'
+import WishlistBookCard from '@/components/book/WishlistBookCard.vue'
+import { useRouter } from 'vue-router'
 
-const bookStore = useBookStore()
+const router = useRouter()
+
 const wishlist = useWishlistStore()
+const wishBooks = ref<Book[]>([])
 
-onMounted(() => {
-  if (!bookStore.list.length) bookStore.loadList()
-  wishlist.load()
+onMounted(async () => {
+  try {
+    const res = await accountApi.getBookList('wishlist')
+    wishBooks.value = res.data.books
+    console.log(wishBooks.value)
+  } catch (e) {
+    console.error(e)
+  }
 })
 
-// 위시리스트에 담긴 id만 매핑
-const wishBooks = computed(() =>
-  wishlist.ids
-    .map(id => bookStore.list.find(b => b.id === id))
-    .filter(Boolean)
-)
+const handleRemove = (book: Book) => {
+  wishlist.remove(book.id)
+  wishBooks.value = wishBooks.value.filter(b => b.id !== book.id)
+}
+
+const handlePreview = () => {
+  router.push({ name: 'home' })
+}
 </script>
 
 <template>
@@ -30,29 +41,13 @@ const wishBooks = computed(() =>
     </div>
 
     <!-- 그리드 -->
-    <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-      <div v-for="book in wishBooks" :key="book!.id" class="group">
-        <BookCard :book="book!" />
-        <!-- 카드 하단 아이콘/액션 (페이지 전용) -->
-        <div class="mt-3 flex items-center gap-3 text-sm">
-          <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-amber-500 text-black font-bold">북</span>
-          <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-neutral-800 text-neutral-300">ℹ︎</span>
-          <button
-            class="ml-auto rounded-md px-3 py-1.5 ring-1 ring-neutral-700 text-neutral-200 hover:bg-neutral-800"
-            @click="$router.push({ name: 'home' })"
-            title="미리보기"
-          >
-            미리보기
-          </button>
-          <button
-            class="rounded-md px-3 py-1.5 bg-neutral-700 text-white hover:bg-neutral-600"
-            @click="useWishlistStore().remove(book!.id)"
-            title="찜 해제"
-          >
-            해제
-          </button>
-        </div>
-        <hr class="mt-3 border-neutral-800" />
+    <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
+      <div v-for="book in wishBooks" :key="book.id" class="group">
+        <WishlistBookCard
+          :book="book"
+          @remove="handleRemove"
+          @preview="handlePreview"
+        />
       </div>
     </div>
   </main>
