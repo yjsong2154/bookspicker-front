@@ -15,8 +15,25 @@ const email = ref<string>(auth.user?.email ?? '')
 const nickname = ref<string>(auth.user?.nickname || auth.user?.name || '')
 const isEditingNickname = ref(false)
 
+interface Review {
+  title: string
+  author: string
+  publisher: string
+  date: string
+  content: string
+}
+
 // 내가 쓴 리뷰 (API 연동)
-const myReviews = ref<any[]>([])
+interface ApiComment {
+  book: {
+    title: string
+    publisher: string
+  }
+  created_at: string
+  content: string
+}
+
+const myReviews = ref<Review[]>([])
 const reviewLoading = ref(false)
 const reviewError = ref(false)
 
@@ -26,7 +43,7 @@ async function fetchMyReviews() {
   try {
     const res = await accountApi.getComments({ limit: 5 })
     // API 응답 구조를 컴포넌트 형식에 맞게 변환
-    myReviews.value = res.data.comments.map((c: any) => ({
+    myReviews.value = res.data.comments.map((c: ApiComment) => ({
       title: c.book.title,
       author: '', // API에서 저자 정보를 따로 주지 않으므로 일단 비움
       publisher: c.book.publisher,
@@ -47,6 +64,7 @@ onMounted(() => {
     router.replace({ name: 'login', query: { redirect: '/profile' } })
   } else {
     fetchMyReviews()
+    fetchBookLists()
     // 초기값 동기화
     email.value = auth.user.email
     nickname.value = auth.user.nickname || auth.user.name
@@ -102,23 +120,62 @@ async function withdraw() {
 const cats = ['감성', '역사', '성장', '미스터리', '판타지', '철학', '서사', '현실']
 const vals = [72, 65, 58, 40, 83, 55, 68, 47] // 0~100
 
-// 더미 데이터: 최근 읽은 책
-const recentBooks = [
-  { title: '나나 올리브에게', author: '루리', publisher: '문학동네' },
-  { title: '나나 올리브에게', author: '루리', publisher: '문학동네' },
-  { title: '나나 올리브에게', author: '루리', publisher: '문학동네' },
-  { title: '나나 올리브에게', author: '루리', publisher: '문학동네' },
-  { title: '나나 올리브에게', author: '루리', publisher: '문학동네' },
-]
+// 책 리스트 상태
+interface ApiBook {
+  title: string
+  publisher: string
+  cover_image: string
+}
 
-// 더미 데이터: 좋아요 한 책
-const likedBooks = [
-  { title: '나나 올리브에게', author: '루리', publisher: '문학동네' },
-  { title: '나나 올리브에게', author: '루리', publisher: '문학동네' },
-  { title: '나나 올리브에게', author: '루리', publisher: '문학동네' },
-  { title: '나나 올리브에게', author: '루리', publisher: '문학동네' },
-  { title: '나나 올리브에게', author: '루리', publisher: '문학동네' },
-]
+interface BookItem {
+  title: string
+  author: string
+  publisher: string
+  cover_image: string
+}
+
+const recentBooks = ref<BookItem[]>([])
+const wishlistBooks = ref<BookItem[]>([])
+const bookLoading = ref({ recent: false, wishlist: false })
+const bookError = ref({ recent: false, wishlist: false })
+
+async function fetchBookLists() {
+  // 최근 읽은 책
+  bookLoading.value.recent = true
+  bookError.value.recent = false
+  try {
+    const res = await accountApi.getBookList('recent', 5)
+    recentBooks.value = res.data.books.map((b: ApiBook) => ({
+      title: b.title,
+      author: '', // API에 저자 정보 없음
+      publisher: b.publisher,
+      cover_image: b.cover_image
+    }))
+  } catch (err) {
+    console.error('Failed to fetch recent books:', err)
+    bookError.value.recent = true
+  } finally {
+    bookLoading.value.recent = false
+  }
+
+  // 찜한 책 (wishlist)
+  bookLoading.value.wishlist = true
+  bookError.value.wishlist = false
+  try {
+    const res = await accountApi.getBookList('wishlist', 5)
+    wishlistBooks.value = res.data.books.map((b: ApiBook) => ({
+      title: b.title,
+      author: '',
+      publisher: b.publisher,
+      cover_image: b.cover_image
+    }))
+  } catch (err) {
+    console.error('Failed to fetch wishlist books:', err)
+    bookError.value.wishlist = true
+  } finally {
+    bookLoading.value.wishlist = false
+  }
+}
 </script>
 
 <template>
@@ -190,8 +247,24 @@ const likedBooks = [
 
       <!-- 중단: 책 리스트 -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-24 mb-20 border-t border-neutral-800 pt-12">
-        <ProfileBookList title="최근 읽은 책" :books="recentBooks" />
-        <ProfileBookList title="'좋아요'한 책" :books="likedBooks" />
+        <div @click="router.push('/library')" class="cursor-pointer group">
+          <ProfileBookList
+            title="최근 읽은 책"
+            :books="recentBooks"
+            :loading="bookLoading.recent"
+            :error="bookError.recent"
+            class="group-hover:opacity-80 transition-opacity"
+          />
+        </div>
+        <div @click="router.push('/wishlist')" class="cursor-pointer group">
+          <ProfileBookList
+            title="'찜'한 책"
+            :books="wishlistBooks"
+            :loading="bookLoading.wishlist"
+            :error="bookError.wishlist"
+            class="group-hover:opacity-80 transition-opacity"
+          />
+        </div>
       </div>
 
       <!-- 하단: 리뷰 리스트 -->

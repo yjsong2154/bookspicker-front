@@ -34,4 +34,8 @@ export const accountApi = {
   // Profile
   updateNickname: (data: { nickname: string }) => api.patch('/accounts/nickname/', data),
   resign: (data: { confirm: boolean; refresh: string }) => api.post('/accounts/resign/', data),
+  getBookList: (filter: 'library' | 'liked' | 'wishlist' | 'recent', limit = 20, offset = 0) =>
+    api.get(`/accounts/booklist/`, { params: { filter, limit, offset } }),
+  getComments: (params?: { limit?: number; offset?: number; status?: string; isbn?: string }) =>
+    api.get('/accounts/comments/', { params }),
 }
