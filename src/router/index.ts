@@ -13,6 +13,7 @@ const router = createRouter({
     { path: '/best-seller', name: 'best-seller', component: () => import('@/views/BestSellerView.vue'), meta: { requiresAuth: true } },
     { path: '/wishlist', name: 'wishlist', component: () => import('@/views/WishlistView.vue'), meta: { requiresAuth: true } },
     { path: '/library', name: 'library', component: () => import('@/views/LibraryView.vue'), meta: { requiresAuth: true } },
+    { path: '/search', name: 'search', component: () => import('@/views/SearchView.vue'), meta: { requiresAuth: true } },
     { path: '/profile', name: 'profile', component: () => import('@/views/ProfileView.vue'), meta: { requiresAuth: true } },
     { path: '/reader', name: 'reader', component: () => import('@/views/EpubReaderView.vue'), meta: { requiresAuth: true } },
 

@@ -65,4 +65,5 @@ export const bookApi = {
   addComment: (isbn: string, data: AddCommentRequest) => api.post(`/api/books/${isbn}/comment/`, data),
   addToLibrary: (isbn: string) => api.post(`/api/books/${isbn}/library/`),
   getPopularBooks: (period: 'monthly' | 'weekly' | 'steady' = 'monthly') => api.get<{ message: string; items: PopularBook[] }>(`/api/books/popular/?q=${period}`),
+  searchBooks: (query: string) => api.get<{ message: string; books: Book[] }>(`/api/books/search/`, { params: { q: query } }),
 }

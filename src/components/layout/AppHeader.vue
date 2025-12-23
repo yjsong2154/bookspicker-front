@@ -5,8 +5,8 @@ const q = ref('')
 const router = useRouter()
 function onSearch(e: Event) {
   e.preventDefault()
-  // 검색 동작은 이후 연결. 일단 홈으로 이동
-  router.push({ name: 'home' })
+  if (!q.value.trim()) return
+  router.push({ name: 'search', query: { q: q.value } })
 }
 </script>
 

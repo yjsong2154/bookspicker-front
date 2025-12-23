@@ -52,6 +52,7 @@ const fetchBanner = async () => {
       // Map Banner response to Book type
       bannerBook.value = {
         id: String(banner.banner_id),
+        isbn: '', // API response doesn't have isbn
         title: banner.title,
         author: '', // API response doesn't have author, using empty string
         coverUrl: banner.key_visual_image,
