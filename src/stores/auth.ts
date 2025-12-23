@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
+import { accountApi } from '../api/accounts'
 
 type User = {
   id: string;
@@ -43,10 +44,10 @@ export const useAuthStore = defineStore('auth', {
         user: this.user
       }))
     },
-    async checkAuth(accountApi: any) {
+    async checkAuth(api: typeof accountApi) {
       if (!this.token) return
       try {
-        const res = await accountApi.getMe()
+        const res = await api.getMe()
         this.user = res.data.user
         this.persist()
       } catch (err) {
@@ -75,6 +76,24 @@ export const useAuthStore = defineStore('auth', {
         this.refreshToken = token.refresh
         this.user = user
         this.persist()
+
+        // Sync with Analysis Server
+        try {
+          await axios.post('http://127.0.0.1:8001/users/', {
+            id_backend: user.id,
+            name: user.name || user.nickname || 'Unknown',
+            email: user.email
+          })
+          console.log('✅ Synced user to Analysis Server')
+        } catch (e: unknown) {
+          // Ignore if user already exists (400)
+          if (axios.isAxiosError(e) && e.response && e.response.status === 400) {
+            console.log('ℹ️ User already in Analysis Server')
+          } else {
+            console.warn('Failed to sync user to Analysis Server:', e)
+          }
+        }
+
         return true
       } catch (err: unknown) {
         console.error('Google Login Error', err)
@@ -91,7 +110,7 @@ export const useAuthStore = defineStore('auth', {
       this.user = null
       localStorage.removeItem(STORAGE_KEY)
     },
-    async resign(api: any) {
+    async resign(api: typeof accountApi) {
       if (!this.refreshToken) throw new Error('Refresh token missing')
       await api.resign({ confirm: true, refresh: this.refreshToken })
       this.logout()
