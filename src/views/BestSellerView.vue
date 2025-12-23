@@ -5,8 +5,6 @@ import { useRouter } from 'vue-router'
 import { bookApi } from '@/api/books'
 import type { Book } from '@/types/book'
 import BestSellerItem from '@/components/book/BestSellerItem.vue'
-import Modal from '@/components/ui/Modal.vue'
-import BookDetail from '@/components/book/BookDetail.vue'
 
 const router = useRouter()
 const books = ref<Book[]>([])
@@ -17,6 +15,7 @@ onMounted(async () => {
     console.log(data)
     books.value = data.items.map(item => ({
       id: item.isbn,
+      isbn: item.isbn,
       title: item.title,
       author: item.publisher,
       coverUrl: item.cover_image,
@@ -32,9 +31,9 @@ onMounted(async () => {
 })
 
 
-const selectedId = ref<string | null>(null)
-const openModal = (id: string) => (selectedId.value = id)
-const closeModal = () => (selectedId.value = null)
+const goToDetail = (id: string) => {
+  router.push({ name: 'book-detail', params: { isbn: id } })
+}
 
 async function onWish(id: string) {
   try {
@@ -71,14 +70,9 @@ async function onWish(id: string) {
         :key="book.id"
         :book="book"
         :rank="idx + 1"
-        @open="openModal"
+        @open="goToDetail"
         @wish="onWish"
       />
     </ul>
   </main>
-
-  <!-- 모달(바로 보기) -->
-  <Modal v-if="selectedId" @close="closeModal">
-    <BookDetail :id="selectedId!" />
-  </Modal>
 </template>

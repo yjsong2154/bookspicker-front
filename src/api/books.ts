@@ -14,16 +14,32 @@ export interface BookComment {
 
 export interface BookDetailResponse {
   message: string
-  book: Book & {
+  book: {
     isbn: string
-    is_liked?: boolean
-    is_wished?: boolean
-    comments?: BookComment[]
-    // Snake_case fields from API
-    cover_url?: string
-    description?: string
-    buy_url?: string
-    // Add other fields as needed
+    title: string
+    cover_image: string
+    description: string
+    genre_path: string
+    is_liked: boolean
+    is_wished: boolean
+    like_count: number
+    published_date: string
+    publisher: string
+    why_picked: {
+      body: string
+    }
+    authors: {
+      name: string
+      bio: string
+      role: string
+      detail_url: string
+    }[]
+    action_urls: {
+      purchase_url?: string
+      read_now_url?: string
+    }
+    comments: BookComment[]
+    book_tags: string[]
   }
 }
 

@@ -9,13 +9,16 @@ const router = createRouter({
 
     // 보호 라우트들
     { path: '/', name: 'home', component: () => import('@/views/HomeView.vue'), meta: { requiresAuth: true } },
-    { path: '/book/:id', name: 'book-detail', component: () => import('@/views/HomeView.vue'), props: true, },
+    { path: '/books/:isbn', name: 'book-detail', component: () => import('@/views/BookDetailView.vue'), props: true },
     { path: '/best-seller', name: 'best-seller', component: () => import('@/views/BestSellerView.vue'), meta: { requiresAuth: true } },
     { path: '/wishlist', name: 'wishlist', component: () => import('@/views/WishlistView.vue'), meta: { requiresAuth: true } },
     { path: '/library', name: 'library', component: () => import('@/views/LibraryView.vue'), meta: { requiresAuth: true } },
     { path: '/search', name: 'search', component: () => import('@/views/SearchView.vue'), meta: { requiresAuth: true } },
     { path: '/profile', name: 'profile', component: () => import('@/views/ProfileView.vue'), meta: { requiresAuth: true } },
     { path: '/reader', name: 'reader', component: () => import('@/views/EpubReaderView.vue'), meta: { requiresAuth: true } },
+
+    // 관리자
+    { path: '/admin/books/register', name: 'book-register', component: () => import('@/views/BookRegisterView.vue'), meta: { requiresAuth: true } },
 
     // 공개 페이지(약관/개인정보)
     { path: '/terms', name: 'terms', component: () => import('@/views/TermsView.vue') },
