@@ -13,44 +13,65 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <section class="relative rounded-2xl overflow-hidden bg-neutral-900 ring-1 ring-neutral-800">
-    <!-- 배경 이미지 -->
-    <div class="relative h-52 md:h-72">
-      <img
-        :src="props.book.coverUrl"
-        :alt="props.book.title"
-        class="absolute inset-0 w-full h-full object-cover"
-      />
-      <!-- 어둡게 오버레이 -->
-      <div class="absolute inset-0 bg-neutral-950/60"></div>
-    </div>
+  <section class="relative w-full overflow-hidden rounded-3xl bg-[#1e222e]">
+    <!-- Background Spotlight Effect -->
+    <div
+      class="pointer-events-none absolute -top-[20%] right-1/2 h-[150%] w-[60%] translate-x-1/2 -rotate-12 bg-gradient-to-b from-indigo-500/10 via-purple-500/5 to-transparent blur-3xl"
+    ></div>
 
-    <!-- 내용 -->
-    <div class="absolute inset-0 p-6 md:p-8 flex flex-col justify-end">
-      <h3 class="text-white text-xl md:text-2xl font-extrabold drop-shadow-sm">
-        {{ username ?? '독자' }}님, 지금 이 책 어때요?
-      </h3>
-      <p class="text-neutral-200 text-sm md:text-base mt-2 max-w-2xl">
-        사용자 취향을 반영한 예비 추천입니다. 지금 바로 미리보기로 첫 페이지를 열어보세요.
-      </p>
+    <div class="relative z-10 grid grid-cols-1 items-center gap-8 p-8 md:grid-cols-2 md:p-12">
+      <!-- Left: Text Content -->
+      <div class="text-left">
+        <h2 class="mb-4 text-3xl font-bold text-[#e2e8f0] md:text-4xl">
+          나를 위한 추천
+        </h2>
+        <div class="mb-6 space-y-2">
+          <p class="text-lg leading-relaxed text-[#94a3b8]">
+            <span class="font-semibold text-indigo-300">{{ props.username ?? '독자' }}</span>님, 이 책은 어떠신가요?
+          </p>
+          <p class="text-base text-[#64748b] line-clamp-2">
+            {{ props.book.summary || '취향 분석을 통해 선정된 도서입니다.' }}
+          </p>
+        </div>
 
-      <div class="mt-4 flex items-center gap-3">
-        <button
-          class="inline-flex items-center gap-2 rounded-full bg-white text-neutral-900 px-4 py-2 text-sm font-semibold hover:bg-neutral-100"
-          @click="emit('open', props.book.id)"
+        <div class="flex items-center gap-3">
+          <button
+            class="group inline-flex items-center gap-2 rounded-lg bg-[#334155] px-6 py-3 text-base font-medium text-white transition-colors hover:bg-[#475569]"
+            @click="emit('open', props.book.id)"
+          >
+            바로 보기
+          </button>
+          <button
+            class="rounded-lg border border-[#475569] px-4 py-3 text-base font-medium text-[#94a3b8] hover:bg-[#1e293b] hover:text-white transition-colors"
+          >
+            찜하기
+          </button>
+        </div>
+      </div>
+
+      <!-- Right: Book Image with 3D effect -->
+      <div class="relative flex justify-center py-4 md:py-0">
+        <!-- Decoration Label -->
+        <div
+          class="absolute -bottom-4 left-10 z-20 rotate-[5deg] bg-indigo-600 px-4 py-1 text-sm font-bold text-white shadow-lg md:left-16 md:text-base"
         >
-          ▶︎ 바로 보기
-        </button>
-        <button
-          class="rounded-full bg-neutral-700 text-white px-4 py-2 text-sm hover:bg-neutral-600"
-        >
-          찜하기
-        </button>
-        <button
-          class="rounded-full border border-neutral-400 text-neutral-200 px-4 py-2 text-sm hover:bg-white/5"
-        >
-          상세
-        </button>
+          취향 저격
+        </div>
+
+        <!-- Book Wrapper -->
+        <div class="relative w-32 md:w-44">
+          <!-- Book Cover -->
+          <img
+            :src="props.book.coverUrl"
+            :alt="props.book.title"
+            class="relative z-10 w-full rounded-md shadow-2xl transition-transform duration-500 hover:-translate-y-2"
+          />
+
+          <!-- Bottom Shadow -->
+          <div
+            class="absolute -bottom-6 left-1/2 h-4 w-[90%] -translate-x-1/2 bg-black/30 blur-lg"
+          ></div>
+        </div>
       </div>
     </div>
   </section>

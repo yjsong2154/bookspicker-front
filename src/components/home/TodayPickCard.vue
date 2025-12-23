@@ -5,53 +5,76 @@ import type { Book } from '@/types/book'
 const props = defineProps<{
   book: Book
   username?: string
+  actionLabel?: string
 }>()
 
 // 부모에서 모달을 열도록 id를 올려보냄
 const emit = defineEmits<{
   (e: 'open', id: string): void
 }>()
+
+const handleAction = () => {
+  if (props.book.buyUrl) {
+    window.open(props.book.buyUrl, '_blank')
+  } else {
+    emit('open', props.book.id)
+  }
+}
 </script>
 
 <template>
-  <section
-    class="relative rounded-2xl overflow-hidden ring-1 ring-neutral-800 bg-neutral-900"
-  >
-    <div class="grid grid-cols-1 md:grid-cols-2">
-      <!-- 왼쪽: 그라데이션 + 카피 -->
-      <div
-        class="p-6 md:p-8 bg-gradient-to-r from-fuchsia-700/70 via-rose-600/70 to-amber-500/70 text-white"
-      >
-        <p class="text-xs/none opacity-90 mb-2">추천받은 결과</p>
-        <h2 class="text-2xl md:text-3xl font-extrabold drop-shadow-sm">
-          오늘의 추천, <span class="text-amber-200">한 장만</span> 읽어볼까요?
-        </h2>
-        <p class="text-sm md:text-base opacity-90 mt-3">
-          취향 기반으로 고른 도서입니다. ‘찜하기’로 저장하고, ‘바로 보기’로 미리보기를 시작해 보세요.
-        </p>
+  <section class="relative w-full overflow-hidden rounded-3xl bg-[#1e222e]">
+    <!-- Background Spotlight Effect -->
+    <!-- Top light source simulation -->
+    <div
+      class="pointer-events-none absolute -top-[20%] left-1/2 h-[150%] w-[60%] -translate-x-1/2 rotate-12 bg-gradient-to-b from-white/10 via-white/5 to-transparent blur-3xl"
+    ></div>
 
-        <div class="mt-5 flex items-center gap-3">
-          <button
-            class="inline-flex items-center gap-2 rounded-full bg-white text-neutral-900 px-4 py-2 text-sm font-semibold hover:bg-neutral-100"
-            @click="emit('open', props.book.id)"
-          >
-            ▶︎ 바로 보기
-          </button>
-          <button
-            class="rounded-full border border-white/70 px-4 py-2 text-sm text-white hover:bg-white/10"
-          >
-            건너뛰기
-          </button>
+    <div class="relative z-10 grid grid-cols-1 items-center gap-8 p-8 md:grid-cols-2 md:p-12">
+      <!-- Left: Text Content -->
+      <div class="text-left">
+        <span class="mb-2 block text-sm font-bold text-pink-500">주목할 만한 책</span>
+        <h2 class="mb-4 text-3xl font-bold text-[#e2e8f0] md:text-4xl">
+          {{ props.book.title }}
+        </h2>
+        <div class="mb-6 space-y-2">
+          <p class="text-lg leading-relaxed text-[#94a3b8] line-clamp-3">
+            {{ props.book.summary || '작품 설명이 없습니다. 직접 읽어보며 이 책의 매력을 찾아보세요.' }}
+          </p>
+          <p class="text-sm text-[#64748b]">- 책 소개</p>
         </div>
+
+        <button
+          class="group inline-flex items-center gap-2 rounded-lg bg-[#334155] px-6 py-3 text-base font-medium text-white transition-colors hover:bg-[#475569]"
+          @click="handleAction"
+        >
+          {{ props.actionLabel || '보러가기' }}
+        </button>
       </div>
 
-      <!-- 오른쪽: 표지 이미지 -->
-      <div class="relative h-48 md:h-full">
-        <img
-          :src="props.book.coverUrl"
-          :alt="props.book.title"
-          class="absolute inset-0 w-full h-full object-cover"
-        />
+      <!-- Right: Book Image with 3D effect -->
+      <div class="relative flex justify-center py-4 md:py-0">
+        <!-- Decoration Label -->
+        <div
+          class="absolute -bottom-4 right-10 z-20 rotate-[-5deg] bg-pink-600 px-4 py-1 text-sm font-bold text-white shadow-lg md:right-16 md:text-base"
+        >
+          이달의 주목도서
+        </div>
+
+        <!-- Book Wrapper -->
+        <div class="relative w-32 md:w-44">
+          <!-- Book Cover -->
+          <img
+            :src="props.book.coverUrl"
+            :alt="props.book.title"
+            class="relative z-10 w-full rounded-md shadow-2xl transition-transform duration-500 hover:-translate-y-2"
+          />
+
+          <!-- Bottom Shadow -->
+          <div
+            class="absolute -bottom-6 left-1/2 h-4 w-[90%] -translate-x-1/2 bg-black/30 blur-lg"
+          ></div>
+        </div>
       </div>
     </div>
   </section>

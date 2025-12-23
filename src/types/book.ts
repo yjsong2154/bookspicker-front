@@ -7,4 +7,6 @@ export interface Book {
   buyUrl?: string
   canReadInline?: boolean
   genres?: string[]
+  likeCount?: number
+  isWished?: boolean
 }

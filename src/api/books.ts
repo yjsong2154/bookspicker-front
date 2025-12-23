@@ -1,13 +1,24 @@
 import api from './index'
 import type { Book } from '@/types/book'
 
+
+export interface BookComment {
+  id: number
+  content: string
+  created_at: string
+  user?: {
+    id: number
+    nickname: string
+  }
+}
+
 export interface BookDetailResponse {
   message: string
   book: Book & {
     isbn: string
     is_liked?: boolean
     is_wished?: boolean
-    comments?: any[]
+    comments?: BookComment[]
     // Snake_case fields from API
     cover_url?: string
     description?: string
@@ -35,10 +46,23 @@ export interface AddCommentRequest {
   }
 }
 
+export interface PopularBook {
+  isbn: string
+  title: string
+  publisher: string
+  cover_image: string
+  abstract_descript: string
+  top_tags: string[]
+  is_liked: boolean
+  like_count: number
+  is_wished: boolean
+}
+
 export const bookApi = {
   getBookDetail: (isbn: string) => api.get<BookDetailResponse>(`/api/books/${isbn}/`),
   toggleLike: (isbn: string) => api.post<ToggleLikeResponse>(`/api/books/${isbn}/likes/`),
   toggleWishlist: (isbn: string) => api.post<ToggleWishlistResponse>(`/api/books/${isbn}/wishlist/`),
   addComment: (isbn: string, data: AddCommentRequest) => api.post(`/api/books/${isbn}/comment/`, data),
   addToLibrary: (isbn: string) => api.post(`/api/books/${isbn}/library/`),
+  getPopularBooks: (period: 'monthly' | 'weekly' | 'steady' = 'monthly') => api.get<{ message: string; items: PopularBook[] }>(`/api/books/popular/?q=${period}`),
 }

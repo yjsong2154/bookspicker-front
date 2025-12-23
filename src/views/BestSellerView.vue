@@ -1,27 +1,52 @@
 <!-- src/views/BestSellerView.vue -->
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
-import { useBookStore } from '@/stores/book'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { bookApi } from '@/api/books'
+import type { Book } from '@/types/book'
 import BestSellerItem from '@/components/book/BestSellerItem.vue'
 import Modal from '@/components/ui/Modal.vue'
 import BookDetail from '@/components/book/BookDetail.vue'
 
-const store = useBookStore()
+const router = useRouter()
+const books = ref<Book[]>([])
 
-onMounted(() => {
-  if (!store.list.length) store.loadList()
+onMounted(async () => {
+  try {
+    const { data } = await bookApi.getPopularBooks('monthly')
+    console.log(data)
+    books.value = data.items.map(item => ({
+      id: item.isbn,
+      title: item.title,
+      author: item.publisher,
+      coverUrl: item.cover_image,
+      summary: item.abstract_descript,
+      genres: item.top_tags,
+      likeCount: item.like_count,
+      isWished: item.is_wished
+    }))
+    console.log(books.value)
+  } catch (error) {
+    console.error('Failed to fetch best sellers:', error)
+  }
 })
 
-// 랭킹 10개 (여기서는 임시로 기존 mock을 그대로 Top10으로 사용)
-const top10 = computed(() => store.list.slice(0, 10))
 
 const selectedId = ref<string | null>(null)
 const openModal = (id: string) => (selectedId.value = id)
 const closeModal = () => (selectedId.value = null)
 
-function onWish(id: string) {
-  // TODO: 찜하기 로직 연결 (pinia/로컬스토리지 등)
-  console.log('wish: ', id)
+async function onWish(id: string) {
+  try {
+    const { data } = await bookApi.toggleWishlist(id)
+    // Update local state
+    const book = books.value.find(b => b.id === id)
+    if (book) {
+      book.isWished = data.is_wished
+    }
+  } catch (error) {
+    console.error('Failed to toggle wishlist:', error)
+  }
 }
 </script>
 
@@ -31,7 +56,7 @@ function onWish(id: string) {
     <div class="mb-6 flex items-center justify-between">
       <button
         class="inline-flex items-center gap-2 rounded-md px-3 py-2 ring-1 ring-neutral-700 text-neutral-200 hover:bg-neutral-800"
-        @click="$router.back()"
+        @click="router.back()"
       >
         ← 뒤로가기
       </button>
@@ -42,7 +67,7 @@ function onWish(id: string) {
     <!-- 리스트 -->
     <ul class="rounded-xl bg-neutral-900 ring-1 ring-neutral-800 px-4 sm:px-6">
       <BestSellerItem
-        v-for="(book, idx) in top10"
+        v-for="(book, idx) in books"
         :key="book.id"
         :book="book"
         :rank="idx + 1"
