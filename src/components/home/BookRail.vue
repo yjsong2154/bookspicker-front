@@ -2,24 +2,35 @@
 <script setup lang="ts">
 import { onMounted, ref, computed, watch, nextTick } from 'vue'
 import { useBookStore } from '@/stores/book'
+import type { Book } from '@/types/book'
 import BookCard from '@/components/book/BookCard.vue'
 import Skeleton from '@/components/ui/Skeleton.vue'
 
-defineProps<{ title: string }>()
+const props = defineProps<{
+  title: string
+  books?: Book[]
+}>()
+
 const store = useBookStore()
+console.log("store : ",store)
 
 const railRef = ref<HTMLDivElement | null>(null)
 
-// 책 목록이 비어있으면 불러오기
+// 책 목록이 비어있으면 불러오기 (props.books가 없을 때만 스토어 사용)
 onMounted(() => {
-  if (!store.list.length) store.loadList()
-  else initScroll()
+  if (props.books && props.books.length > 0) {
+    initScroll()
+  } else {
+    if (!store.list.length) store.loadList()
+    else initScroll()
+  }
 })
 
-// 무한 스크롤을 위해 리스트를 5배로 늘림 (충분한 스크롤 영역 확보)
+// 무한 스크롤을 위해 리스트를 5배로 늘림
 const displayList = computed(() => {
-  if (!store.list.length) return []
-  return [...store.list, ...store.list, ...store.list, ...store.list, ...store.list]
+  const list = (props.books && props.books.length > 0) ? props.books : store.list
+  if (!list.length) return []
+  return [...list, ...list, ...list, ...list, ...list]
 })
 
 // 초기 스크롤 위치를 중앙으로 설정
@@ -33,9 +44,14 @@ const initScroll = async () => {
   }
 }
 
-// 리스트가 로드되면 스크롤 위치 초기화
+// 리스트가 변경되면 스크롤 위치 초기화
+watch(() => props.books, (newVal) => {
+  if (newVal && newVal.length) initScroll()
+})
+
 watch(() => store.list.length, (newLen) => {
-  if (newLen) initScroll()
+  // props.books가 없을 때만 반응
+  if (!props.books?.length && newLen) initScroll()
 })
 
 // 무한 스크롤 처리 함수

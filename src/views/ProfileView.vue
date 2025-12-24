@@ -144,7 +144,7 @@ async function fetchBookLists() {
   bookLoading.value.recent = true
   bookError.value.recent = false
   try {
-    const res = await accountApi.getBookList('recent', 5)
+    const res = await accountApi.getBookList('library', 5)
     recentBooks.value = res.data.books.map((b: ApiBook) => ({
       title: b.title,
       author: '', // API에 저자 정보 없음

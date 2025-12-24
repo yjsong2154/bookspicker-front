@@ -18,7 +18,7 @@ const router = createRouter({
     { path: '/reader', name: 'reader', component: () => import('@/views/EpubReaderView.vue'), meta: { requiresAuth: true } },
 
     // 관리자
-    { path: '/admin/books/register', name: 'book-register', component: () => import('@/views/BookRegisterView.vue'), meta: { requiresAuth: true } },
+    { path: '/admin/books/register', name: 'book-register', component: () => import('@/views/BookRegisterView.vue') },
 
     // 공개 페이지(약관/개인정보)
     { path: '/terms', name: 'terms', component: () => import('@/views/TermsView.vue') },
@@ -46,8 +46,8 @@ router.beforeEach((to) => {
     return { name: 'login', query: { redirect: to.fullPath } }
   }
 
-  // 로그인 상태인데 콜드스타트 미완료 유저라면 콜드 스타트로 리다이렉트 (콜드 스타트 페이지 제외)
-  if (auth.isAuthed && auth.user?.is_coldstart_completed === false && to.name !== 'cold-start') {
+  // 로그인 상태인데 콜드스타트 미완료 유저라면 콜드 스타트로 리다이렉트 (콜드 스타트 페이지 제외, 책 등록 제외)
+  if (auth.isAuthed && auth.user?.is_coldstart_completed === false && to.name !== 'cold-start' && to.name !== 'book-register') {
     return { name: 'cold-start' }
   }
 })

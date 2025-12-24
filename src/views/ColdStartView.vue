@@ -8,7 +8,7 @@
       <!-- Step 1: Nickname -->
       <div v-if="step === 1" key="step1" class="step-card">
         <h2 class="step-title">앞으로 뭐라고<br/>불러드릴까요?</h2>
-        
+
         <div class="nickname-guide">
           <p><strong>제한되는 닉네임</strong></p>
           <ul>
@@ -20,10 +20,10 @@
 
         <div class="input-group">
           <div class="input-wrapper">
-            <input 
-              v-model="nickname" 
-              type="text" 
-              placeholder="닉네임" 
+            <input
+              v-model="nickname"
+              type="text"
+              placeholder="닉네임"
               class="nickname-input"
               @input="checkNickname"
             />
@@ -41,7 +41,7 @@
       <!-- Step 2: Info -->
       <div v-else-if="step === 2" key="step2" class="step-card">
         <h2 class="step-title">몇 가지 정보를<br/>추가해볼까요?</h2>
-        
+
         <div class="form-section">
           <select v-model="birthYear" class="year-select">
             <option value="" disabled>생년월 선택</option>
@@ -49,16 +49,16 @@
           </select>
 
           <div class="gender-btns">
-            <button 
-              :class="['gender-btn', { active: gender === 'F' }]" 
+            <button
+              :class="['gender-btn', { active: gender === 'F' }]"
               @click="gender = 'F'"
             >여자</button>
-            <button 
-              :class="['gender-btn', { active: gender === 'M' }]" 
+            <button
+              :class="['gender-btn', { active: gender === 'M' }]"
               @click="gender = 'M'"
             >남자</button>
-            <button 
-              :class="['gender-btn', { active: gender === 'N' }]" 
+            <button
+              :class="['gender-btn', { active: gender === 'N' }]"
               @click="gender = 'N'"
             >비공개</button>
           </div>
@@ -66,7 +66,7 @@
           <div class="slider-section">
             <p class="slider-label">🧐 최근 한 달 동안 책을 얼마나 읽으셨나요? <span>{{ readCount }}권</span></p>
             <input type="range" min="0" max="10" v-model="readCount" class="range-slider" />
-            
+
             <div class="reading-type" :style="{ opacity: readCount > 0 ? 1 : 0.5 }">
               <p v-if="readCount <= 2">✨ 당신은 <strong>가끔 책을 찾아 읽는 소독서가</strong>예요.</p>
               <p v-else-if="readCount <= 5">📖 책과 함께 하루를 쌓아가는 당신, <strong>중독서가</strong>예요.</p>
@@ -81,36 +81,14 @@
         </div>
       </div>
 
-      <!-- Step 3: Tags -->
-      <div v-else-if="step === 3" key="step3" class="step-card">
-        <h2 class="step-title">몇 가지 정보를<br/>추가해볼까요?</h2>
-        <p class="sub-guide">당신의 책 취향을 알려주세요 📖<br/>(최대 5개까지 선택 가능)</p>
-
-        <div class="tag-cloud">
-          <button 
-            v-for="tag in availableTags" 
-            :key="tag.id" 
-            :class="['tag-item', { active: selectedTagIds.includes(tag.id) }]"
-            @click="toggleTag(tag.id)"
-          >
-            # {{ tag.name }}
-          </button>
-        </div>
-
-        <div class="nav-btns">
-          <button class="btn prev" @click="prevStep">이전</button>
-          <button class="btn next" :disabled="selectedTagIds.length === 0" @click="nextStep">다음</button>
-        </div>
-      </div>
-
       <!-- Step 4: Books -->
       <div v-else-if="step === 4" key="step4" class="step-card">
-        <h2 class="step-title">최근에 읽었거나, 읽고 싶은 책이<br/>있다면 5개 선택해주세요</h2>
+        <h2 class="step-title">최근에 읽었거나, 읽고 싶은 책이<br/>있다면 선택해주세요 (1개 이상)</h2>
 
         <div class="book-grid">
-          <div 
-            v-for="book in availableBooks" 
-            :key="book.isbn" 
+          <div
+            v-for="book in availableBooks"
+            :key="book.isbn"
             :class="['book-item', { active: selectedBookIsbns.includes(book.isbn) }]"
             @click="toggleBook(book.isbn)"
             :title="book.title"
@@ -123,8 +101,8 @@
         </div>
 
         <div class="nav-btns vertical">
-          <button class="btn submit-btn" @click="nextStep" :disabled="selectedBookIsbns.length < 5">
-            {{ selectedBookIsbns.length }}개 선택해주셨네요 ({{ 5 - selectedBookIsbns.length > 0 ? 5 - selectedBookIsbns.length + '개 더' : '완료' }})
+          <button class="btn submit-btn" @click="nextStep" :disabled="selectedBookIsbns.length < 1">
+            {{ selectedBookIsbns.length }}개 선택 (다음)
           </button>
           <button class="btn ghost" @click="prevStep">이전</button>
         </div>
@@ -133,14 +111,14 @@
       <!-- Step 5: Loading -->
       <div v-else-if="step === 5" key="step5" class="step-card center">
         <h2 class="step-title">{{ nickname }}님의 취향을<br/>분석하고 있어요</h2>
-        
+
         <div class="loading-container">
           <div class="progress-bar">
             <div class="progress-fill" :style="{ width: progress + '%' }"></div>
           </div>
           <p class="progress-text">{{ progress }}%</p>
         </div>
-        
+
         <div class="animation-placeholder">
           <div class="blob"></div>
         </div>
@@ -158,6 +136,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { accountApi } from '@/api/accounts'
+import { analysisApi } from '@/api/analysis'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -171,11 +150,6 @@ const birthYear = ref('')
 const gender = ref('')
 const readCount = ref(3)
 
-interface Tag {
-  id: number;
-  name: string;
-}
-
 interface Book {
   isbn: string;
   title: string;
@@ -183,9 +157,7 @@ interface Book {
   publisher: string;
 }
 
-const availableTags = ref<Tag[]>([])
 const availableBooks = ref<Book[]>([])
-const selectedTagIds = ref<number[]>([])
 const selectedBookIsbns = ref<string[]>([])
 
 const progress = ref(0)
@@ -201,27 +173,37 @@ onMounted(async () => {
     }
 
     // 2. 데이터 미리 로드
-    const [tagsRes, booksRes] = await Promise.all([
-      accountApi.getColdstartTags(),
-      accountApi.getColdstartBooks()
-    ])
-    availableTags.value = tagsRes.data.tags
-    availableBooks.value = booksRes.data.books
+    const { data } = await accountApi.getColdstartBooks()
+    availableBooks.value = data.books
   } catch (err) {
     console.error('Failed to load coldstart data', err)
   }
 })
 
 const nextStep = () => {
+  // Step 1 -> 2
+  if (step.value === 1) {
+    step.value = 2
+    return
+  }
+  // Step 2 -> 4 (Step 3 Tags removed)
+  if (step.value === 2) {
+    step.value = 4
+    return
+  }
+  // Step 4 -> 5 (Finish)
   if (step.value === 4) {
     step.value = 5
     startAnalysis()
     return
   }
-  step.value++
 }
 
 const prevStep = () => {
+  if (step.value === 4) {
+    step.value = 2
+    return
+  }
   if (step.value > 1) step.value--
 }
 
@@ -235,14 +217,6 @@ const checkNickname = () => {
   nicknameError.value = ''
 }
 
-const toggleTag = (id: number) => {
-  if (selectedTagIds.value.includes(id)) {
-    selectedTagIds.value = selectedTagIds.value.filter(t => t !== id)
-  } else if (selectedTagIds.value.length < 5) {
-    selectedTagIds.value.push(id)
-  }
-}
-
 const toggleBook = (isbn: string) => {
   if (selectedBookIsbns.value.includes(isbn)) {
     selectedBookIsbns.value = selectedBookIsbns.value.filter(b => b !== isbn)
@@ -252,29 +226,50 @@ const toggleBook = (isbn: string) => {
 }
 
 const startAnalysis = async () => {
-  // 실제 데이터 제출
+  // Start animation immediately
+  let progressValue = 0
+  const interval = setInterval(() => {
+    if (progressValue < 90) {
+      progressValue += 2
+      progress.value = progressValue
+    }
+  }, 50)
+
   try {
-    await accountApi.setNickname({ nickname: nickname.value })
-    await accountApi.setProfileInfo({
-      profile_info: {
-        birth_year: parseInt(birthYear.value),
-        sex: gender.value,
-        books_per_month: parseInt(readCount.value.toString())
-      }
-    })
-    await accountApi.setPreferredTags({ tag_ids: selectedTagIds.value })
-    await accountApi.setPreferredBooks({ isbn_list: selectedBookIsbns.value })
+    // 1. Backend Profile Update
+    const accountCalls = [
+      accountApi.setNickname({ nickname: nickname.value }),
+      accountApi.setProfileInfo({
+        profile_info: {
+          birth_year: parseInt(birthYear.value),
+          sex: gender.value,
+          books_per_month: parseInt(readCount.value.toString())
+        }
+      }),
+      accountApi.setPreferredBooks({ isbn_list: selectedBookIsbns.value })
+    ]
+    await Promise.all(accountCalls)
+
+    // 2. Analysis Server Sync (Record Read History)
+    // Don't let this block main flow critical path if possible, or keep it fast.
+    if (auth.user?.id) {
+        const userId = Number(auth.user.id)
+        if (!isNaN(userId)) {
+            await Promise.all(selectedBookIsbns.value.map(isbn =>
+                analysisApi.recordReadHistory(userId, isbn)
+            ))
+            console.log('Synced cold start books to analysis server')
+        }
+    }
+
   } catch (err) {
     console.error('Failed to submit coldstart data', err)
   }
 
-  const interval = setInterval(() => {
-    progress.value += 2
-    if (progress.value >= 100) {
-      clearInterval(interval)
-      completeColdStart()
-    }
-  }, 50)
+  // Finish animation
+  clearInterval(interval)
+  progress.value = 100
+  completeColdStart()
 }
 
 const completeColdStart = async () => {

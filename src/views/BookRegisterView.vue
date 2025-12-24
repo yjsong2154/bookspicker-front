@@ -27,6 +27,42 @@ const metaInfo = ref({
 const coverFile = ref<File | null>(null)
 const epubFile = ref<File | null>(null)
 
+// --- Admin Auth ---
+const adminToken = ref('')
+const useAdminToken = ref(true)
+const username = ref('')
+const password = ref('')
+const loginError = ref('')
+
+const handleAdminLogin = async () => {
+    loginError.value = ''
+    if (!username.value || !password.value) {
+        loginError.value = '아이디와 패스워드를 입력해주세요.'
+        return
+    }
+
+    try {
+        const resp = await axios.post('http://127.0.0.1:8000/api/token/', {
+            username: username.value,
+            password: password.value
+        })
+        if (resp.data.access) {
+            adminToken.value = resp.data.access
+            useAdminToken.value = true
+        }
+    } catch (e: unknown) {
+        console.error('Login Failed', e)
+        loginError.value = '로그인 실패: 아이디/비번을 확인해주세요.'
+    }
+}
+
+const getAuthHeaders = () => {
+    if (useAdminToken.value && adminToken.value) {
+        return { Authorization: `Bearer ${adminToken.value}` }
+    }
+    return {}
+}
+
 
 // Author Info
 interface Author {
@@ -37,21 +73,31 @@ interface Author {
 
 const authors = ref<Author[]>([])
 
+interface AuthorSearchResult {
+    id: number
+    name: string
+    profile_image: string | null
+    bio: string
+}
+
 // --- Author Search Logic ---
 const authorSearchQuery = ref('')
-const authorSearchResults = ref<any[]>([])
+const authorSearchResults = ref<AuthorSearchResult[]>([])
 
 const searchAuthors = async () => {
     try {
         const query = authorSearchQuery.value.trim()
-        const resp = await api.get('/api/admin/authors/', { params: { name: query } })
+        const resp = await api.get<AuthorSearchResult[]>('/api/admin/authors/', {
+            params: { name: query },
+            headers: getAuthHeaders()
+        })
         authorSearchResults.value = resp.data
     } catch (e) {
         console.error('Author Search Failed:', e)
     }
 }
 
-const selectAuthor = (authorData: any) => {
+const selectAuthor = (authorData: AuthorSearchResult) => {
     // Check duplicate
     if (authors.value.find(a => a.id === authorData.id)) {
         alert('이미 추가된 작가입니다.')
@@ -71,7 +117,7 @@ const createAuthor = async () => {
     if (!confirm(`"${authorSearchQuery.value}" 작가를 새로 생성하시겠습니까?`)) return
 
     try {
-        const resp = await api.post('/api/admin/authors/', { name: authorSearchQuery.value })
+        const resp = await api.post('/api/admin/authors/', { name: authorSearchQuery.value }, { headers: getAuthHeaders() })
         const newAuthor = resp.data.author
         selectAuthor(newAuthor)
         alert('작가가 생성되고 추가되었습니다.')
@@ -198,13 +244,6 @@ const processTags = (rawTags: Record<string, Record<string, number>>) => {
   return finalTags
 }
 
-
-
-const addAuthor = () => {
-    // Placeholder for adding author logic
-    console.log('Add author clicked')
-}
-
 const removeAuthor = (id: number) => {
   authors.value = authors.value.filter(a => a.id !== id)
 }
@@ -218,6 +257,27 @@ const addTag = () => {
 
 const removeTag = (index: number) => {
   aiContent.value.tags.splice(index, 1)
+}
+
+interface BookRegisterPayload {
+  isbn: string
+  title: string
+  subtitle: string
+  publisher: string
+  published_date: string
+  page_count: number
+  series_name: string
+  lang: string
+  purchase_link: string
+  genre_child_id: number
+  abstract_descript: string
+  full_descript: string
+  top_tags: string[]
+  recommendation_refer: string[]
+  toc: { label: string; href: string }[]
+  contributors: { name: string; role: string; is_primary: boolean }[]
+  cover_image?: string
+  epub_file?: string
 }
 
 const save = async () => {
@@ -237,7 +297,7 @@ const save = async () => {
   }
 
   // Payload Construction (Exclude Files)
-  const payload = {
+  const payload: BookRegisterPayload = {
       isbn: metaInfo.value.isbn,
       title: metaInfo.value.title,
       subtitle: metaInfo.value.subtitle,
@@ -276,7 +336,7 @@ const save = async () => {
       if (metaInfo.value.coverUrl && metaInfo.value.coverUrl.startsWith('http')) {
            // Treating as external URL if needed, but backend logic prefers file.
            // Let's pass it in payload if you want to support external URL without file upload
-           (payload as any).cover_image = metaInfo.value.coverUrl
+           payload.cover_image = metaInfo.value.coverUrl
       }
   }
 
@@ -284,7 +344,7 @@ const save = async () => {
       formData.append('epub_file', epubFile.value)
   } else {
       if (metaInfo.value.epubUrl && metaInfo.value.epubUrl.startsWith('http')) {
-          (payload as any).epub_file = metaInfo.value.epubUrl
+          payload.epub_file = metaInfo.value.epubUrl
       }
   }
 
@@ -295,7 +355,10 @@ const save = async () => {
 
   try {
       const resp = await api.post('/api/admin/books/', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            ...getAuthHeaders()
+          }
       })
       if (resp.status === 201) {
 
@@ -303,7 +366,7 @@ const save = async () => {
           try {
               // Construct author string
               const authorNames = authors.value.filter(a => a.role === '글쓴이').map(a => a.name).join(', ')
-              
+
               const analysisFormData = new FormData()
               analysisFormData.append('isbn', metaInfo.value.isbn)
               analysisFormData.append('title', metaInfo.value.title)
@@ -312,7 +375,7 @@ const save = async () => {
               analysisFormData.append('published_year', formattedDate.substring(0, 4))
               analysisFormData.append('tags', JSON.stringify(aiContent.value.tags))
               analysisFormData.append('embedding', JSON.stringify(aiContent.value.vector))
-              
+
               if (coverFile.value) {
                   analysisFormData.append('cover_image', coverFile.value)
               }
@@ -353,8 +416,38 @@ const save = async () => {
   <div class="min-h-screen bg-black text-white p-8 font-sans">
     <div class="max-w-5xl mx-auto space-y-12">
 
+      <!-- Login Form (If no token) -->
+      <div v-if="!adminToken" class="flex flex-col items-center justify-center h-[60vh]">
+          <div class="bg-gray-900 border border-gray-700 p-8 rounded-xl shadow-xl w-full max-w-md space-y-6">
+              <h2 class="text-2xl font-bold text-center">Admin Login</h2>
+              <div class="space-y-4">
+                  <div>
+                      <label class="block text-gray-400 text-sm mb-1">Username</label>
+                      <input v-model="username" type="text" class="w-full bg-black border border-gray-600 rounded px-3 py-2 focus:border-white outline-none" @keyup.enter="handleAdminLogin" />
+                  </div>
+                  <div>
+                      <label class="block text-gray-400 text-sm mb-1">Password</label>
+                      <input v-model="password" type="password" class="w-full bg-black border border-gray-600 rounded px-3 py-2 focus:border-white outline-none" @keyup.enter="handleAdminLogin" />
+                  </div>
+                  <div v-if="loginError" class="text-red-400 text-sm text-center">
+                      {{ loginError }}
+                  </div>
+              </div>
+              <button @click="handleAdminLogin" class="w-full bg-white text-black font-bold py-3 rounded hover:bg-gray-200 transition">
+                  Login & Access
+              </button>
+          </div>
+      </div>
+
+      <!-- Registration Form (If token exists) -->
+      <div v-else>
       <!-- Header -->
-      <h1 class="text-3xl font-bold mb-8">Registration</h1>
+      <div class="flex justify-between items-end mb-8">
+          <h1 class="text-3xl font-bold">Registration</h1>
+          <div class="text-xs text-green-400 border border-green-800 bg-green-900/30 px-3 py-1 rounded-full">
+              Admin Authenticated
+          </div>
+      </div>
 
       <!-- Section 1: Meta Info -->
       <section class="grid grid-cols-12 gap-8">
@@ -519,7 +612,7 @@ const save = async () => {
                         {{ index === 0 ? '대표' : '참여' }}
                     </div>
                     <div class="text-gray-400 cursor-move">≡</div> <!-- Placeholder for drag handle -->
-                    
+
                     <div class="flex-1">
                         <div class="text-sm font-bold">{{ author.name }}</div>
                         <div class="text-xs text-gray-500">ID: {{ author.id }}</div>
@@ -581,9 +674,9 @@ const save = async () => {
             </div>
         </div>
       </section>
-
-      <!-- Footer Buttons -->
-      <div class="flex justify-end gap-3 pt-8 pb-12">
+      </div>
+      <!-- Footer Buttons (Only show when logged in) -->
+      <div v-if="adminToken" class="flex justify-end gap-3 pt-8 pb-12">
         <button class="px-6 py-2 bg-gray-800 hover:bg-gray-700 rounded text-gray-300 transition">취소</button>
         <button @click="save" class="px-6 py-2 bg-gray-500 hover:bg-gray-400 text-black font-bold rounded transition">저장</button>
       </div>
