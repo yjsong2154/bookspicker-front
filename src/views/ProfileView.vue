@@ -2,10 +2,11 @@
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
-import RadarDummy from '@/components/charts/RadarDummy.vue'
 import ProfileBookList from '@/components/profile/ProfileBookList.vue'
 import ProfileReviewList from '@/components/profile/ProfileReviewList.vue'
+import WordCloud from '@/components/common/WordCloud.vue'
 import { accountApi } from '@/api/accounts'
+import { analysisApi, type AnalysisWordCloudItem } from '@/api/analysis'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -65,6 +66,7 @@ onMounted(() => {
   } else {
     fetchMyReviews()
     fetchBookLists()
+    fetchWordCloud()
     // 초기값 동기화
     email.value = auth.user.email
     nickname.value = auth.user.nickname || auth.user.name
@@ -116,9 +118,22 @@ async function withdraw() {
   }
 }
 
-// 레이더 더미 데이터
-const cats = ['감성', '역사', '성장', '미스터리', '판타지', '철학', '서사', '현실']
-const vals = [72, 65, 58, 40, 83, 55, 68, 47] // 0~100
+// 워드 클라우드 상태
+const wordCloudData = ref<AnalysisWordCloudItem[]>([])
+const wordCloudLoading = ref(false)
+
+async function fetchWordCloud() {
+    if (!auth.user) return
+    wordCloudLoading.value = true
+    try {
+        const res = await analysisApi.getWordCloud(parseInt(auth.user.id))
+        wordCloudData.value = res.data
+    } catch (e) {
+        console.error(e)
+    } finally {
+        wordCloudLoading.value = false
+    }
+}
 
 // 책 리스트 상태
 interface ApiBook {
@@ -230,18 +245,23 @@ async function fetchBookLists() {
           </button>
         </div>
 
-        <!-- 우측: 레이더 차트 -->
-        <div class="flex flex-col items-center justify-center border border-neutral-800 rounded-lg p-8 bg-neutral-900/30">
-          <div class="w-full max-w-[320px]">
-            <RadarDummy :categories="cats" :values="vals" />
+        <!-- 우측: 워드 클라우드 -->
+        <div class="flex flex-col items-center justify-center border border-neutral-800 rounded-lg p-8 bg-neutral-900/30 min-h-[300px]">
+          <div class="w-full h-full flex items-center justify-center" v-if="wordCloudLoading">
+             <div class="text-neutral-500">Loading tags...</div>
           </div>
-          <div class="mt-6 text-center">
-            <h3 class="text-lg font-bold text-neutral-200 mb-1">사색적 탐구 타입</h3>
-            <p class="text-xs text-neutral-500">
-              문장 속에 담긴 의미를 곱씹고<br/>
-              사유하는 독자
-            </p>
-          </div>
+          <template v-else>
+            <div class="w-full">
+                <WordCloud :words="wordCloudData" />
+            </div>
+            <div class="mt-6 text-center">
+                <h3 class="text-lg font-bold text-neutral-200 mb-1">나의 독서 키워드</h3>
+                <p class="text-xs text-neutral-500">
+                읽은 책들에서 발견된<br/>
+                나만의 취향 태그
+                </p>
+            </div>
+          </template>
         </div>
       </div>
 

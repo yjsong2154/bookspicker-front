@@ -88,7 +88,15 @@ export const analysisApi = {
   },
   removeReadHistory: (userId: number, isbn: string) => {
     return analysisApiInstance.delete(`/users/${userId}/books/isbn/${isbn}`)
+  },
+  getWordCloud: (userId: number) => {
+    return analysisApiInstance.get<AnalysisWordCloudItem[]>(`/users/${userId}/wordcloud`)
   }
+}
+
+export interface AnalysisWordCloudItem {
+  text: string
+  value: number
 }
 
 export interface RecommendationBook {
