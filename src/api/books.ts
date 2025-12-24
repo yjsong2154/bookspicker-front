@@ -56,6 +56,7 @@ export interface ToggleWishlistResponse {
 }
 
 export interface AddCommentRequest {
+  user_id: number
   content: string
   tags?: {
     existing_tag_ids?: number[]

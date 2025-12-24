@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { bookApi, type BookDetailResponse } from '@/api/books'
+import { bookApi, type BookDetailResponse, type BookComment } from '@/api/books'
 import { analysisApi } from '@/api/analysis'
 
 const route = useRoute()
@@ -23,7 +23,15 @@ const fetchBook = async () => {
   try {
     const res = await bookApi.getBookDetail(isbn)
     console.log(res.data.book)
-    bookData.value = res.data.book
+    const BACKEND_BASE_URL = 'http://127.0.0.1:8000'
+    const book = res.data.book
+    if (book.cover_image && !book.cover_image.startsWith('http')) {
+      book.cover_image = `${BACKEND_BASE_URL}${book.cover_image}`
+    }
+    if (book.epub_url && !book.epub_url.startsWith('http')) {
+      book.epub_url = `${BACKEND_BASE_URL}${book.epub_url}`
+    }
+    bookData.value = book
   } catch (e) {
     console.error(e)
     error.value = "책 정보를 불러오는데 실패했습니다."
@@ -74,29 +82,14 @@ const submitComment = async () => {
 
     isSubmitting.value = true
     try {
-        // Backend expects user_id in the body.
-        // We need to cast authStore.user.id to number if it's a string, assuming backend handles it or we parse it.
-        // The auth store defines id as string, but backend expects int user_id.
-        // Let's assume the string ID is parseable to int (e.g. "1").
-        // const userId = parseInt(authStore.user.id)
+        const userId = parseInt(authStore.user.id)
 
         await bookApi.addComment(isbn, {
+            user_id: userId,
             content: newComment.value,
-            // API signature update might be needed if addComment doesn't support user_id in schema?
-            // Wait, schema `CommentCreate` needs `user_id`. `AddCommentRequest` in frontend interface currently:
-            // content: string, tags?: ...
-            // I need to update AddCommentRequest interface in api/books.ts first?
-            // Actually `bookApi.addComment` takes `isbn` and `data`.
-            // The backend endpoint `create_comment` takes `comment: schemas.CommentCreate`.
-            // `CommentCreate` has `user_id`.
-            // So I MUST send `user_id`. I should verify `api/books.ts` interface.
-        } as any) // Casting to any to bypass strict type check if interface isn't updated yet, but better to update interface.
+        })
 
-        // Actually, let's fix the interface in the previous step or assume I did?
-        // I didn't update AddCommentRequest in the previous step. only updateComment/deleteComment.
-        // I should probably fix the call here to include user_id.
-        // But `AddCommentRequest` is `content: string; tags?: ...`.
-        // I should have updated that too. I'll just send it as part of the object and let JS handle it.
+
 
         newComment.value = ''
         await fetchBook() // Refresh to show new comment
@@ -108,7 +101,7 @@ const submitComment = async () => {
     }
 }
 
-const startEdit = (comment: any) => {
+const startEdit = (comment: BookComment) => {
     editingCommentId.value = comment.comment_id
     editingContent.value = comment.content
 }

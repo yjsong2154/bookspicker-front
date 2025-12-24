@@ -13,7 +13,11 @@ const authStore = useAuthStore()
 onMounted(async () => {
   try {
     const res = await accountApi.getBookList('library')
-    libraryBooks.value = res.data.books
+    const BACKEND_BASE_URL = 'http://127.0.0.1:8000'
+    libraryBooks.value = res.data.books.map((b: Book) => ({
+      ...b,
+      coverUrl: b.coverUrl && b.coverUrl.startsWith('http') ? b.coverUrl : `${BACKEND_BASE_URL}${b.coverUrl}`
+    }))
   } catch (e) {
     console.error(e)
   }

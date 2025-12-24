@@ -11,7 +11,7 @@ import Modal from '@/components/ui/Modal.vue'
 import BookDetail from '@/components/book/BookDetail.vue'
 import TodayPickCard from '@/components/home/TodayPickCard.vue'
 import PersonalSuggestCard from '@/components/home/PersonalSuggestCard.vue'
-import CurrentReadingBanner from '@/components/home/CurrentReadingBanner.vue'
+// import CurrentReadingBanner from '@/components/home/CurrentReadingBanner.vue'
 
 // const store = useBookStore() // Unused
 const authStore = useAuthStore()
@@ -51,6 +51,7 @@ const fetchBanner = async () => {
     const { data } = await mainApi.getBanner()
     if (data.banners && data.banners.length > 0) {
       const banner = data.banners[0]!
+      console.log('Banner Image URL:', banner.key_visual_image)
       bannerBook.value = {
         id: String(banner.banner_id),
         isbn: '',
@@ -70,19 +71,6 @@ const fetchBanner = async () => {
 const fetchRecommendations = async () => {
   if (!authStore.user?.id) return
 
-  // Need numeric ID for analysis server?
-  // authStore.user.id is string (from previous view file).
-  // Checking auth store again...
-  // authStore.user: { id: string, email: string ... } but login logic sends id_backend: user.id.
-  // Wait, in previous conversation "Syncing User IDs", id_backend was added.
-  // Docs say /users/{id_backend}/advanced-recommendations.
-  // Is authStore.user.id the backend ID?
-  // Store definition: id: string.
-  // Login response: user.id.
-  // Let's assume authStore.user.id can be cast to number, or is the ID we need.
-  // Actually, usually user.id is the primary key.
-  // Let's try parsing it.
-
   try {
     const userId = Number(authStore.user.id)
     if (isNaN(userId)) {
@@ -90,9 +78,8 @@ const fetchRecommendations = async () => {
       return
     }
 
-    console.log("userId : ",userId)
     const { data } = await analysisApi.getAdvancedRecommendations(userId)
-    console.log("추천 : ",data)
+    const ANALYSIS_BASE_URL = 'http://localhost:8001'
 
     // 1. "ai가 가장 추천" section
     const bestPickSection = data.sections.find(s => s.title === 'ai가 가장 추천')
@@ -103,14 +90,24 @@ const fetchRecommendations = async () => {
         isbn: bookData.isbn,
         title: bookData.title,
         author: bookData.author,
-        coverUrl: bookData.cover_image,
+        coverUrl: bookData.cover_image.startsWith('http')
+          ? bookData.cover_image
+          : `${ANALYSIS_BASE_URL}${bookData.cover_image}`,
         summary: bookData.description
       }
     }
 
     // 2. Other sections for rails
-    recommendationSections.value = data.sections.filter(s => s.title !== 'ai가 가장 추천')
-    console.log("recommendationSections : ",recommendationSections.value)
+    const otherSections = data.sections.filter(s => s.title !== 'ai가 가장 추천')
+    recommendationSections.value = otherSections.map(section => ({
+      ...section,
+      books: section.books.map(b => ({
+        ...b,
+        cover_image: b.cover_image.startsWith('http')
+          ? b.cover_image
+          : `${ANALYSIS_BASE_URL}${b.cover_image}`
+      }))
+    }))
 
   } catch (error) {
     console.error('Failed to fetch recommendations:', error)
@@ -126,11 +123,11 @@ onMounted(() => {
 
 <template>
   <main class="mx-auto max-w-6xl space-y-8 px-4">
-    <!-- 현재 읽고 있는 책 -->
+    <!-- 현재 읽고 있는 책
     <CurrentReadingBanner
       :book="currentBook"
       :progress="currentProgress"
-    />
+    /> -->
 
     <!-- 주목할 만한 책 (API Data) -->
     <TodayPickCard

@@ -3,6 +3,9 @@ import { onMounted, onBeforeUnmount, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import ePub from 'epubjs'
 
+type EpubBook = ReturnType<typeof ePub>
+type EpubRendition = ReturnType<EpubBook['renderTo']>
+
 // ======= 설정 =======
 const DEFAULT_EPUB_PATH = '/epubs/sample.epub'
 const spreadMode: 'none' | 'auto' | 'always' = 'always' // 항상 양면 표시
@@ -14,8 +17,8 @@ const viewerRef = ref<HTMLDivElement | null>(null)
 const leftHotspotRef = ref<HTMLDivElement | null>(null)
 const rightHotspotRef = ref<HTMLDivElement | null>(null)
 
-let book: any = null
-let rendition: any = null
+let book: EpubBook | null = null
+let rendition: EpubRendition | null = null
 
 // 페이지/위치 추적
 const totalPages = ref<number>(0)
@@ -33,14 +36,21 @@ async function setupLocations() {
     await book.ready
     await book.locations.generate(1024)
     totalPages.value = book.locations.length() || 0
-  } catch (e) {
+  } catch {
     // fallback: locations 실패 시 스파인 길이로 근사
     totalPages.value = (book?.spine?.items?.length ?? 1) * 8 // 대략값
   }
 }
 
+type EpubLocation = {
+  start?: {
+    cfi: string
+  }
+  cfi?: string
+}
+
 // 현재 CFI를 -> 페이지 index 로 환산
-function updateCurrentPageFromLocation(loc: any) {
+function updateCurrentPageFromLocation(loc: EpubLocation | null | undefined) {
   try {
     const cfi = loc?.start?.cfi || loc?.cfi || null
     if (!cfi || !book?.locations) return
@@ -117,17 +127,17 @@ onMounted(async () => {
     await setupLocations()
 
     // 위치 변경 시 현재 페이지 업데이트
-    rendition.on('relocated', (location: any) => {
+    rendition.on('relocated', (location: EpubLocation) => {
       updateCurrentPageFromLocation(location)
     })
 
     // 링크 클릭 시 같은 뷰어 내에서 이동
-    rendition.on('rendered', (_section: any) => {
+    rendition.on('rendered', () => {
       const iframes = viewerRef.value?.getElementsByTagName('iframe')
       if (iframes && iframes[0]) {
         const doc = (iframes[0] as HTMLIFrameElement).contentDocument
         if (doc) {
-          doc.addEventListener('click', (ev: any) => {
+          doc.addEventListener('click', (ev: Event) => {
             const t = ev.target as HTMLAnchorElement
             if (t?.tagName?.toLowerCase() === 'a' && t.getAttribute('href')) {
               ev.preventDefault()
@@ -149,9 +159,10 @@ onMounted(async () => {
     updateCurrentPageFromLocation(loc)
 
     isReady.value = true
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error(e)
-    errorMsg.value = e?.message || 'EPUB 로드 중 오류가 발생했습니다.'
+    const err = e as { message?: string } | null
+    errorMsg.value = err?.message || 'EPUB 로드 중 오류가 발생했습니다.'
     console.error('EPUB load failed:', DEFAULT_EPUB_PATH, e)
   } finally {
     isLoading.value = false
