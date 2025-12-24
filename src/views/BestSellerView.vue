@@ -17,7 +17,7 @@ onMounted(async () => {
       id: item.isbn,
       isbn: item.isbn,
       title: item.title,
-      author: item.publisher,
+      author: item.author || item.publisher, // Fallback to publisher if author is missing
       coverUrl: item.cover_image,
       summary: item.abstract_descript,
       genres: item.top_tags,

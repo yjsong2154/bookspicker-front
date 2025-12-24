@@ -71,6 +71,7 @@ export interface PopularBook {
   cover_image: string
   abstract_descript: string
   top_tags: string[]
+  author: string
   is_liked: boolean
   like_count: number
   is_wished: boolean

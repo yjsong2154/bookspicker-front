@@ -38,7 +38,7 @@ const handleRemove = async (book: Book) => {
     }
 
     // Update local state
-    libraryBooks.value = libraryBooks.value.filter(b => b.id !== book.id)
+    libraryBooks.value = libraryBooks.value.filter(b => b.isbn !== book.isbn)
   } catch (e) {
     console.error('Failed to remove book from library', e)
   }

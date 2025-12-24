@@ -32,7 +32,7 @@ defineProps<{
     <ul v-else class="flex flex-col gap-4">
       <li v-for="(book, i) in books" :key="i" class="flex items-center justify-between text-sm">
         <span class="font-bold text-neutral-200 truncate pr-4">{{ book.title }}</span>
-        <span class="text-neutral-500 shrink-0 text-xs">{{ book.publisher }}</span>
+        <span class="text-neutral-500 shrink-0 text-xs">{{ book.author }}</span>
       </li>
     </ul>
   </div>

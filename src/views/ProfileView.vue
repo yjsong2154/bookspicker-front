@@ -43,10 +43,12 @@ async function fetchMyReviews() {
   reviewError.value = false
   try {
     const res = await accountApi.getComments({ limit: 5 })
+    console.log("res",res)
+
     // API 응답 구조를 컴포넌트 형식에 맞게 변환
     myReviews.value = res.data.comments.map((c: ApiComment) => ({
       title: c.book.title,
-      author: '', // API에서 저자 정보를 따로 주지 않으므로 일단 비움
+      author: '',
       publisher: c.book.publisher,
       date: new Date(c.created_at).toLocaleDateString(),
       content: c.content
@@ -138,6 +140,7 @@ async function fetchWordCloud() {
 // 책 리스트 상태
 interface ApiBook {
   title: string
+  author: string
   publisher: string
   cover_image: string
 }
@@ -162,7 +165,7 @@ async function fetchBookLists() {
     const res = await accountApi.getBookList('library', 5)
     recentBooks.value = res.data.books.map((b: ApiBook) => ({
       title: b.title,
-      author: '', // API에 저자 정보 없음
+      author: b.author,
       publisher: b.publisher,
       cover_image: b.cover_image
     }))
@@ -180,7 +183,7 @@ async function fetchBookLists() {
     const res = await accountApi.getBookList('wishlist', 5)
     wishlistBooks.value = res.data.books.map((b: ApiBook) => ({
       title: b.title,
-      author: '',
+      author: b.author,
       publisher: b.publisher,
       cover_image: b.cover_image
     }))
