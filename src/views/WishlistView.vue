@@ -2,11 +2,9 @@
 import type { Book } from '@/types/book'
 import { ref, onMounted } from 'vue'
 import { accountApi } from '@/api/accounts'
+import { bookApi } from '@/api/books'
 import { useWishlistStore } from '@/stores/wishlist'
 import WishlistBookCard from '@/components/book/WishlistBookCard.vue'
-import { useRouter } from 'vue-router'
-
-const router = useRouter()
 
 const wishlist = useWishlistStore()
 const wishBooks = ref<Book[]>([])
@@ -21,13 +19,17 @@ onMounted(async () => {
   }
 })
 
-const handleRemove = (book: Book) => {
-  wishlist.remove(book.id)
-  wishBooks.value = wishBooks.value.filter(b => b.id !== book.id)
-}
+const handleRemove = async (book: Book) => {
+  try {
+    // API 호출로 찜 해제 (toggleWishlist는 이미 찜 상태면 해제함)
+    await bookApi.toggleWishlist(book.isbn)
 
-const handlePreview = () => {
-  router.push({ name: 'home' })
+    // 로컬 상태 업데이트
+    wishlist.remove(book.isbn)
+    wishBooks.value = wishBooks.value.filter(b => b.isbn !== book.isbn) // book.id 대신 book.isbn 사용 권장 (일관성)
+  } catch (error) {
+    console.error('Failed to remove from wishlist:', error)
+  }
 }
 </script>
 
@@ -46,7 +48,6 @@ const handlePreview = () => {
         <WishlistBookCard
           :book="book"
           @remove="handleRemove"
-          @preview="handlePreview"
         />
       </div>
     </div>
