@@ -507,8 +507,8 @@ const completeColdStart = async () => {
 /* Step 4 Styles */
 .book-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 20px;
   margin-bottom: 40px;
   max-height: 400px;
   overflow-y: auto;

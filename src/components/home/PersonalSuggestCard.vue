@@ -29,7 +29,7 @@ const goToDetail = () => {
         </h2>
         <div class="mb-6 space-y-2">
           <p class="text-lg leading-relaxed text-[#94a3b8]">
-            <span class="font-semibold text-indigo-300">{{ props.username ?? '독자' }}</span>님, 이 책은 어떠신가요?
+            <span class="font-semibold text-indigo-300">이 책은 어떠신가요?</span>
           </p>
           <p class="text-base text-[#64748b] line-clamp-2">
             {{ props.book.summary || '취향 분석을 통해 선정된 도서입니다.' }}

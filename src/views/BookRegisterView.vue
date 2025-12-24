@@ -73,6 +73,22 @@ interface Author {
 
 const authors = ref<Author[]>([])
 
+interface Genre {
+    id: number
+    name: string
+    parent: string
+}
+const genres = ref<Genre[]>([])
+
+onMounted(async () => {
+    try {
+        const resp = await bookApi.getGenreList()
+        genres.value = resp.data
+    } catch (e) {
+        console.error('Failed to load genres', e)
+    }
+})
+
 interface AuthorSearchResult {
     id: number
     name: string
@@ -139,6 +155,8 @@ const newTag = ref('')
 // --- Methods ---
 
 import api from '@/api' // Import main API
+import { bookApi } from '@/api/books'
+import { onMounted } from 'vue'
 
 const handleCoverUpload = (event: Event) => {
   const file = (event.target as HTMLInputElement).files?.[0]
@@ -539,8 +557,13 @@ const save = async () => {
             </div>
 
             <div class="flex items-center gap-4">
-                <label class="w-24 text-gray-400 font-medium">장르 ID</label>
-                <input v-model="metaInfo.genreId" type="number" class="w-24 bg-transparent border border-gray-600 rounded px-3 py-2 focus:border-white transition-colors outline-none" />
+                <label class="w-24 text-gray-400 font-medium">장르</label>
+                <select v-model="metaInfo.genreId" class="flex-1 bg-transparent border border-gray-600 rounded px-3 py-2 focus:border-white transition-colors outline-none text-white">
+                    <option :value="0" disabled>장르 선택</option>
+                    <option v-for="g in genres" :key="g.id" :value="g.id" class="bg-black">
+                        {{ g.parent }} > {{ g.name }}
+                    </option>
+                </select>
             </div>
 
             <div class="flex gap-4">

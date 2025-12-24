@@ -76,7 +76,14 @@ export interface PopularBook {
   is_wished: boolean
 }
 
+export interface Genre {
+  id: number
+  name: string
+  parent: string
+}
+
 export const bookApi = {
+  getGenreList: () => api.get<Genre[]>('/api/admin/genres/'),
   getBookDetail: (isbn: string) => api.get<BookDetailResponse>(`/api/books/${isbn}/`),
   toggleLike: (isbn: string) => api.post<ToggleLikeResponse>(`/api/books/${isbn}/likes/`),
   toggleWishlist: (isbn: string) => api.post<ToggleWishlistResponse>(`/api/books/${isbn}/wishlist/`),
