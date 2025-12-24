@@ -3,9 +3,12 @@ import type { Book } from '@/types/book'
 import { ref, onMounted } from 'vue'
 import { accountApi } from '@/api/accounts'
 import { bookApi } from '@/api/books'
+import { analysisApi } from '@/api/analysis'
+import { useAuthStore } from '@/stores/auth'
 import LibraryBookCard from '@/components/book/LibraryBookCard.vue'
 
 const libraryBooks = ref<Book[]>([])
+const authStore = useAuthStore()
 
 onMounted(async () => {
   try {
@@ -18,17 +21,23 @@ onMounted(async () => {
 
 const handleRemove = async (book: Book) => {
   try {
-    // Assuming addToLibrary toggles the status. If it was in library, it should be removed.
-    await bookApi.addToLibrary(book.isbn)
+    // Delete from library via API
+    await bookApi.deleteFromLibrary(book.isbn)
+
+    // Sync with Analysis Server (Remove read history)
+    if (authStore.user) {
+        try {
+            await analysisApi.removeReadHistory(parseInt(authStore.user.id), book.isbn)
+        } catch (err) {
+            console.error('Analysis Sync Error:', err)
+        }
+    }
+
+    // Update local state
     libraryBooks.value = libraryBooks.value.filter(b => b.id !== book.id)
   } catch (e) {
     console.error('Failed to remove book from library', e)
   }
-}
-
-const handleRead = (book: Book) => {
-  console.log('Read book:', book.title)
-  // TODO: Implement read functionality navigation
 }
 </script>
 
@@ -47,7 +56,6 @@ const handleRead = (book: Book) => {
         <LibraryBookCard
           :book="book"
           @remove="handleRemove"
-          @read="handleRead"
         />
       </div>
     </div>

@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import ePub from 'epubjs'
 
 // ======= 설정 =======
-const EPUB_PATH = '/epubs/sample.epub'     // public/epubs/sample.epub
+const DEFAULT_EPUB_PATH = '/epubs/sample.epub'
 const spreadMode: 'none' | 'auto' | 'always' = 'always' // 항상 양면 표시
 const flowMode: 'paginated' | 'scrolled' = 'paginated'  // 페이지 단위 넘김
 
 // ======= 상태 =======
+const route = useRoute()
 const viewerRef = ref<HTMLDivElement | null>(null)
 const leftHotspotRef = ref<HTMLDivElement | null>(null)
 const rightHotspotRef = ref<HTMLDivElement | null>(null)
@@ -83,8 +85,13 @@ function handleResize() {
 onMounted(async () => {
   try {
     isLoading.value = true
+
+    // Query Param에서 URL 확인
+    const urlParam = route.query.url as string | undefined
+    const bookPath = urlParam || DEFAULT_EPUB_PATH
+
     // 책 로드
-    book = ePub(EPUB_PATH)
+    book = ePub(bookPath)
 
     // 렌더러 생성
     rendition = book.renderTo(viewerRef.value!, {
@@ -145,7 +152,7 @@ onMounted(async () => {
   } catch (e: any) {
     console.error(e)
     errorMsg.value = e?.message || 'EPUB 로드 중 오류가 발생했습니다.'
-    console.error('EPUB load failed:', EPUB_PATH, e)
+    console.error('EPUB load failed:', DEFAULT_EPUB_PATH, e)
   } finally {
     isLoading.value = false
   }

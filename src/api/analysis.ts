@@ -84,10 +84,10 @@ export const analysisApi = {
     return analysisApiInstance.get<RecommendationResponse>(`/users/${userId}/advanced-recommendations`)
   },
   recordReadHistory: (userId: number, isbn: string) => {
-    return analysisApiInstance.post('/users/record-read', {
-      id_backend: userId,
-      isbn: isbn
-    })
+    return analysisApiInstance.post(`/users/${userId}/books/isbn/${isbn}`)
+  },
+  removeReadHistory: (userId: number, isbn: string) => {
+    return analysisApiInstance.delete(`/users/${userId}/books/isbn/${isbn}`)
   }
 }
 

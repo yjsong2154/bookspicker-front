@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { bookApi, type BookDetailResponse } from '@/api/books'
+import { analysisApi } from '@/api/analysis'
 
 const route = useRoute()
 const router = useRouter()
@@ -75,26 +76,26 @@ const submitComment = async () => {
     try {
         // Backend expects user_id in the body.
         // We need to cast authStore.user.id to number if it's a string, assuming backend handles it or we parse it.
-        // The auth store defines id as string, but backend expects int user_id. 
-        // Let's assume the string ID is parseable to int (e.g. "1"). 
-        const userId = parseInt(authStore.user.id)
-        
+        // The auth store defines id as string, but backend expects int user_id.
+        // Let's assume the string ID is parseable to int (e.g. "1").
+        // const userId = parseInt(authStore.user.id)
+
         await bookApi.addComment(isbn, {
             content: newComment.value,
             // API signature update might be needed if addComment doesn't support user_id in schema?
             // Wait, schema `CommentCreate` needs `user_id`. `AddCommentRequest` in frontend interface currently:
-            // content: string, tags?: ... 
-            // I need to update AddCommentRequest interface in api/books.ts first? 
-            // Actually `bookApi.addComment` takes `isbn` and `data`. 
+            // content: string, tags?: ...
+            // I need to update AddCommentRequest interface in api/books.ts first?
+            // Actually `bookApi.addComment` takes `isbn` and `data`.
             // The backend endpoint `create_comment` takes `comment: schemas.CommentCreate`.
             // `CommentCreate` has `user_id`.
             // So I MUST send `user_id`. I should verify `api/books.ts` interface.
         } as any) // Casting to any to bypass strict type check if interface isn't updated yet, but better to update interface.
-        
-        // Actually, let's fix the interface in the previous step or assume I did? 
+
+        // Actually, let's fix the interface in the previous step or assume I did?
         // I didn't update AddCommentRequest in the previous step. only updateComment/deleteComment.
         // I should probably fix the call here to include user_id.
-        // But `AddCommentRequest` is `content: string; tags?: ...`. 
+        // But `AddCommentRequest` is `content: string; tags?: ...`.
         // I should have updated that too. I'll just send it as part of the object and let JS handle it.
 
         newComment.value = ''
@@ -146,9 +147,42 @@ const deleteComment = async (commentId: number) => {
     }
 }
 
-const readNow = () => {
-    // Navigate to reader
-    router.push({ name: 'reader', query: { isbn: isbn } })
+const readNow = async () => {
+    try {
+        await bookApi.addToLibrary(isbn)
+
+        // Sync with Analysis Server
+        if (authStore.user) {
+            try {
+                await analysisApi.recordReadHistory(parseInt(authStore.user.id), isbn)
+            } catch (err) {
+                console.error('Analysis Sync Error:', err)
+            }
+        }
+
+        // Navigate to reader with epub url
+        // bookData.value.epub_url might be undefined, handle gracefully if needed or let reader handle default?
+        // User asked to use epub url.
+        if (bookData.value?.epub_url) {
+            router.push({ name: 'reader', query: { url: bookData.value.epub_url } })
+        } else {
+            // Fallback or just go to reader without URL (reader might load sample)
+            router.push({ name: 'reader' })
+        }
+    } catch (e) {
+        console.error('Failed to add to library', e)
+        // Even if library add fails, we might still want to read?
+        // Or should we block? Usually better to let them read.
+        // But maybe the error is important.
+        // For now, let's proceed to read as well if it fails?
+        // User requirement: "Read Now calls API then opens reader".
+        // I will assume we should proceed.
+        if (bookData.value?.epub_url) {
+            router.push({ name: 'reader', query: { url: bookData.value.epub_url } })
+        } else {
+            router.push({ name: 'reader' })
+        }
+    }
 }
 
 onMounted(() => {
@@ -266,7 +300,7 @@ onMounted(() => {
       <!-- Reviews Section -->
       <section class="mb-20">
         <h3 class="text-xl font-bold mb-6">Comments</h3>
-        
+
         <!-- Write Comment Form -->
         <div class="mb-10 bg-[#1e1e1e] p-6 rounded-lg border border-gray-800">
             <template v-if="authStore.user">
@@ -275,14 +309,14 @@ onMounted(() => {
                         {{ authStore.user.name?.[0]?.toUpperCase() ?? 'U' }}
                     </div>
                     <div class="flex-1">
-                        <textarea 
-                            v-model="newComment" 
-                            placeholder="이 책에 대한 생각을 나누어보세요..." 
+                        <textarea
+                            v-model="newComment"
+                            placeholder="이 책에 대한 생각을 나누어보세요..."
                             class="w-full bg-[#2a2a2a] text-white p-4 rounded-md border border-gray-700 focus:border-indigo-500 focus:outline-none min-h-[100px] mb-3 transition-colors"
                         ></textarea>
                         <div class="flex justify-end">
-                            <button 
-                                @click="submitComment" 
+                            <button
+                                @click="submitComment"
                                 :disabled="isSubmitting || !newComment.trim()"
                                 class="px-6 py-2 bg-indigo-600 text-white rounded-md font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition transform active:scale-95"
                             >
@@ -309,7 +343,7 @@ onMounted(() => {
                             <span class="font-bold text-white">{{ comment.user?.nickname || 'Unknown' }}</span>
                             <span class="text-xs text-gray-500">{{ new Date(comment.created_at).toLocaleDateString() }}</span>
                         </div>
-                        
+
                         <!-- Edit/Delete Buttons (Only for owner) -->
                         <div v-if="authStore.user && comment.user && comment.user.id === parseInt(authStore.user.id)" class="opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
                             <button @click="startEdit(comment)" class="text-xs text-gray-400 hover:text-white">수정</button>
@@ -319,8 +353,8 @@ onMounted(() => {
 
                     <!-- Edit Mode -->
                     <div v-if="editingCommentId === comment.comment_id">
-                        <textarea 
-                            v-model="editingContent" 
+                        <textarea
+                            v-model="editingContent"
                             class="w-full bg-[#2a2a2a] text-white p-3 rounded-md border border-gray-700 focus:border-indigo-500 focus:outline-none mb-2"
                         ></textarea>
                         <div class="flex justify-end gap-2">
