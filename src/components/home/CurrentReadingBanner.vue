@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import type { Book } from '@/types/book'
 
 const props = defineProps<{
@@ -8,13 +9,21 @@ const props = defineProps<{
   lastReadAt?: string
 }>()
 
+const router = useRouter()
 const hasBook = computed(() => !!props.book)
+
+const goToDetail = () => {
+  if (props.book?.isbn) {
+    router.push(`/books/${props.book.isbn}`)
+  }
+}
 </script>
 
 <template>
   <section
     v-if="hasBook && props.book"
-    class="flex w-full items-center gap-4 overflow-hidden rounded-2xl bg-[#FCD34D] p-4 shadow-sm md:p-5"
+    @click="goToDetail"
+    class="flex w-full items-center gap-4 overflow-hidden rounded-2xl bg-[#FCD34D] p-4 shadow-sm md:p-5 cursor-pointer transition-transform hover:scale-[1.01]"
   >
     <!-- Book Cover -->
     <div class="h-16 w-12 flex-shrink-0 overflow-hidden rounded shadow-sm md:h-20 md:w-14">

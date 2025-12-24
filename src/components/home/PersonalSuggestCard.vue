@@ -1,5 +1,5 @@
-<!-- src/components/home/PersonalSuggestCard.vue -->
 <script setup lang="ts">
+import { useRouter } from 'vue-router'
 import type { Book } from '@/types/book'
 
 const props = defineProps<{
@@ -7,9 +7,11 @@ const props = defineProps<{
   username?: string
 }>()
 
-const emit = defineEmits<{
-  (e: 'open', id: string): void
-}>()
+const router = useRouter()
+
+const goToDetail = () => {
+  router.push(`/books/${props.book.isbn}`)
+}
 </script>
 
 <template>
@@ -37,14 +39,9 @@ const emit = defineEmits<{
         <div class="flex items-center gap-3">
           <button
             class="group inline-flex items-center gap-2 rounded-lg bg-[#334155] px-6 py-3 text-base font-medium text-white transition-colors hover:bg-[#475569]"
-            @click="emit('open', props.book.id)"
+            @click="goToDetail"
           >
             바로 보기
-          </button>
-          <button
-            class="rounded-lg border border-[#475569] px-4 py-3 text-base font-medium text-[#94a3b8] hover:bg-[#1e293b] hover:text-white transition-colors"
-          >
-            찜하기
           </button>
         </div>
       </div>

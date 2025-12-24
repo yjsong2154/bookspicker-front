@@ -1,5 +1,5 @@
-<!-- src/components/home/TodayPickCard.vue -->
 <script setup lang="ts">
+import { useRouter } from 'vue-router'
 import type { Book } from '@/types/book'
 
 const props = defineProps<{
@@ -8,17 +8,11 @@ const props = defineProps<{
   actionLabel?: string
 }>()
 
-// 부모에서 모달을 열도록 id를 올려보냄
-const emit = defineEmits<{
-  (e: 'open', id: string): void
-}>()
+const router = useRouter()
 
 const handleAction = () => {
-  if (props.book.buyUrl) {
-    window.open(props.book.buyUrl, '_blank')
-  } else {
-    emit('open', props.book.id)
-  }
+  // 사용자가 요청한 대로 상세 페이지로 이동
+  router.push(`/books/${props.book.isbn}`)
 }
 </script>
 

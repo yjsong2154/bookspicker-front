@@ -1,21 +1,15 @@
 <script setup lang="ts">
 import type { Book } from '@/types/book'
-import { useWishlistStore } from '@/stores/wishlist'
+// import { useWishlistStore } from '@/stores/wishlist'
+import { useRouter } from 'vue-router'
 
 const props = defineProps<{ book: Book }>()
-const wishlist = useWishlistStore()
-// wishlist.load() is likely called in a parent or main.ts, but keeping it if it was there for safety,
-// though usually stores are initialized globally. The previous code had it.
-// However, calling load() inside every card component is bad for performance if it triggers API calls.
-// Assuming it's a lightweight check or already loaded.
-// I'll keep the toggle logic but remove the load() call if it's redundant,
-// but to be safe and minimize side effects, I'll leave it out if it's not strictly necessary for *display*
-// (reactivity should handle it).
-// Actually, looking at previous code: `wishlist.load()` was called.
-// If I remove it and it was necessary, it might break.
-// But `load()` usually fetches data. Doing it N times for N cards is bad.
-// I will assume the store is initialized elsewhere or this is a local storage sync.
-// I'll leave it out for now to follow best practices, unless the user complains.
+// const wishlist = useWishlistStore()
+const router = useRouter()
+
+const goToDetail = () => {
+  router.push(`/books/${props.book.isbn}`)
+}
 </script>
 
 <template>
@@ -65,26 +59,12 @@ const wishlist = useWishlistStore()
       <!-- Buttons -->
       <div class="w-full flex flex-col gap-2 mt-auto">
         <!-- Read Now -->
-        <button class="w-full py-2 bg-white text-black rounded-full text-xs font-bold hover:bg-neutral-200 transition-colors">
+        <button
+          @click="goToDetail"
+          class="w-full py-2 bg-white text-black rounded-full text-xs font-bold hover:bg-neutral-200 transition-colors"
+        >
           바로 읽기
         </button>
-
-        <!-- Wishlist -->
-        <button
-          @click.stop="wishlist.toggle(props.book.id)"
-          class="w-full py-2 border border-neutral-600 text-white rounded-full text-xs font-bold hover:bg-neutral-700 transition-colors"
-        >
-          {{ wishlist.has(props.book.id) ? '찜 해제' : '찜하기' }}
-        </button>
-
-        <!-- Buy -->
-        <a
-          :href="props.book.buyUrl"
-          target="_blank"
-          class="block w-full py-2 border border-neutral-600 text-white rounded-full text-xs font-bold hover:bg-neutral-700 transition-colors"
-        >
-          구매하기
-        </a>
       </div>
     </div>
   </div>
