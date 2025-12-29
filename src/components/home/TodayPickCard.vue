@@ -35,7 +35,6 @@ const handleAction = () => {
           <p class="text-lg leading-relaxed text-[#94a3b8] line-clamp-3">
             {{ props.book.summary || '작품 설명이 없습니다. 직접 읽어보며 이 책의 매력을 찾아보세요.' }}
           </p>
-          <p class="text-sm text-[#64748b]">- 책 소개</p>
         </div>
 
         <button
@@ -59,7 +58,7 @@ const handleAction = () => {
         <div class="relative w-32 md:w-44">
           <!-- Book Cover -->
           <img
-            :src="props.book.coverUrl"
+            src="/banner.jpg"
             :alt="props.book.title"
             class="relative z-10 w-full rounded-md shadow-2xl transition-transform duration-500 hover:-translate-y-2"
           />

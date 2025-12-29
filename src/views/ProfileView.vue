@@ -255,7 +255,7 @@ async function fetchBookLists() {
           </div>
           <template v-else>
             <div class="w-full">
-                <WordCloud :words="wordCloudData" />
+                <WordCloud :words="wordCloudData" :max-font-size="40" />
             </div>
             <div class="mt-6 text-center">
                 <h3 class="text-lg font-bold text-neutral-200 mb-1">나의 독서 키워드</h3>

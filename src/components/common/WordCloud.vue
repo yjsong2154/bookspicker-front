@@ -6,9 +6,14 @@ interface Word {
   value: number
 }
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   words: Word[]
-}>()
+  maxFontSize?: number
+  minFontSize?: number
+}>(), {
+  maxFontSize: 15,
+  minFontSize: 5
+})
 
 // Pastel/Neon colors for dark theme
 const colors = [
@@ -23,13 +28,18 @@ const colors = [
 
 const normalizedWords = computed(() => {
   if (props.words.length === 0) return []
-  const maxVal = Math.max(...props.words.map(w => w.value))
-  const minVal = Math.min(...props.words.map(w => w.value))
+  
+  // Randomly select half of the words
+  const shuffled = [...props.words].sort(() => 0.5 - Math.random())
+  const selectedWords = shuffled.slice(0, Math.ceil(props.words.length / 2))
+
+  const maxVal = Math.max(...selectedWords.map(w => w.value))
+  const minVal = Math.min(...selectedWords.map(w => w.value))
   const range = maxVal - minVal || 1
 
-  return props.words.map((w, i) => ({
+  return selectedWords.map((w, i) => ({
     text: w.text,
-    size: 20 + ((w.value - minVal) / range) * 80, // Font size 20px to 100px
+    size: props.minFontSize + ((w.value - minVal) / range) * (props.maxFontSize - props.minFontSize),
     color: colors[i % colors.length],
     rotation: Math.random() > 0.8 ? (Math.random() > 0.5 ? 2 : -2) : 0, // Slight random tilt
   }))
